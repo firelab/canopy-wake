@@ -188,12 +188,6 @@ template<class BasicMomentumTransportModel>
 Foam::tmp<Foam::volSymmTensorField>
 myWindNinjakEpsilon<BasicMomentumTransportModel>::sigma() const
 {
-    // wanted to make sure it was actually overloading the inherited functions
-    // looks like only divDevReff() info is called, but that means that all 
-    //  these four functions are overwriting the inherited functions properly, 
-    //  just only one of the four functions happens to be called for my test simulation.
-    //Info << "    myWindNinjakEpsilon::sigma() call" << endl;
-    
     return tmp<volSymmTensorField>
     (
         new volSymmTensorField
@@ -243,12 +237,6 @@ template<class BasicMomentumTransportModel>
 Foam::tmp<Foam::volSymmTensorField>
 myWindNinjakEpsilon<BasicMomentumTransportModel>::devTau() const
 {
-    // wanted to make sure it was actually overloading the inherited functions
-    // looks like only divDevReff() info is called, but that means that all 
-    //  these four functions are overwriting the inherited functions properly, 
-    //  just only one of the four functions happens to be called for my test simulation.
-    //Info << "    myWindNinjakEpsilon::devTau() call" << endl;
-    
     return tmp<volSymmTensorField>
     (
         new volSymmTensorField
@@ -261,7 +249,7 @@ myWindNinjakEpsilon<BasicMomentumTransportModel>::devTau() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-           -this->nuEff()*dev(twoSymm(fvc::grad(this->U_))) // notice this is the same, other than missing alpha and rho
+           (-(this->alpha_*this->rho_*this->nuEff()))*dev(twoSymm(fvc::grad(this->U_))) // notice this is the same
         )
     );
     
@@ -281,16 +269,15 @@ myWindNinjakEpsilon<BasicMomentumTransportModel>::divDevTau
     volVectorField& U
 ) const
 {
-    // wanted to make sure it was actually overloading the inherited functions
-    // looks like only divDevReff() info is called, but that means that all 
-    //  these four functions are overwriting the inherited functions properly, 
-    //  just only one of the four functions happens to be called for my test simulation.
-    //Info << "    myWindNinjakEpsilon::divDevTau() call" << endl;
+    // before, I did an info/cout to see which of these functions is called, and whether
+    // they were replacing the inherited functions properly. Looks like they are 
+    // inheriting properly, but this was the only function actually used and 
+    // therefore called in my specific simulation test case
     
     return
     (
-      - fvm::laplacian(this->nuEff(), U)    // notice this is the same, other than missing alpha and rho
-      - fvc::div(this->nuEff()*dev(T(fvc::grad(U))))    // notice this uses dev instead of dev2, requiring a different entry in fvSchemes. Also missing alpha and rho
+      - fvm::laplacian(this->alpha_*this->rho_*this->nuEff(), U)    // notice this is the same
+      - fvc::div(this->alpha_*this->rho_*this->nuEff()*dev(T(fvc::grad(U))))    // notice this uses dev instead of dev2, requiring a different entry in fvSchemes
     );
     
     /* OpenFOAM 8 version of the above code */
@@ -309,18 +296,10 @@ myWindNinjakEpsilon<BasicMomentumTransportModel>::divDevTau
     volVectorField& U
 ) const
 {
-    // wanted to make sure it was actually overloading the inherited functions
-    // looks like only divDevReff() info is called, but that means that all 
-    //  these four functions are overwriting the inherited functions properly, 
-    //  just only one of the four functions happens to be called for my test simulation.
-    //Info << "    myWindNinjakEpsilon::divDevTau() other call" << endl;
-    
-    volScalarField muEff("muEff", rho*this->nuEff());
-
     return
     (
-      - fvm::laplacian(muEff, U)    // notice that this is the same, other than missing alpha and rho
-      - fvc::div(muEff*dev(T(fvc::grad(U))))    // notice that this is using dev instead of dev2. Technically it is setup a bit wierd but everything else is the same other than missing alpha
+      - fvm::laplacian(this->alpha_*rho*this->nuEff(), U)    // notice that this is the same
+      - fvc::div(this->alpha_*rho*this->nuEff()*dev(T(fvc::grad(U))))    // notice that this is using dev instead of dev2
     );
     
     /* OpenFOAM 8 version of the above code */
@@ -371,6 +350,7 @@ void myWindNinjakEpsilon<BasicMomentumTransportModel>::correct()
     eddyViscosity<RASModel<BasicMomentumTransportModel>>::correct();
     
     volScalarField::Internal G(this->GName(), nut*2*magSqr(symm(fvc::grad(U))) );
+    // OpenFOAM 8 version of the above code
     //tmp<volTensorField> tgradU = fvc::grad(U);
     //volScalarField::Internal G
     //(
@@ -385,16 +365,11 @@ void myWindNinjakEpsilon<BasicMomentumTransportModel>::correct()
     // Dissipation equation
     tmp<fvScalarMatrix> epsEqn
     (
-        //fvm::ddt(epsilon_)
         fvm::ddt(alpha, rho, epsilon_)
-      //+ fvm::div(phi_, epsilon_)
       + fvm::div(alphaRhoPhi, epsilon_)
-      //- fvm::laplacian(DepsilonEff(), epsilon_)
       - fvm::laplacian(alpha*rho*DepsilonEff(), epsilon_)
      ==
-        //C1_*G*epsilon_/k_
         C1_*alpha()*rho()*G*epsilon_()/k_()
-      //- fvm::Sp(C2_*epsilon_/k_, epsilon_)
       - fvm::Sp(C2_*alpha()*rho()*epsilon_()/k_(), epsilon_)
       + epsilonSource()
       + fvOptions(alpha, rho, epsilon_)
@@ -410,16 +385,11 @@ void myWindNinjakEpsilon<BasicMomentumTransportModel>::correct()
     // Turbulent kinetic energy equation
     tmp<fvScalarMatrix> kEqn
     (
-        //fvm::ddt(k_)
         fvm::ddt(alpha, rho, k_)
-      //+ fvm::div(phi_, k_)
       + fvm::div(alphaRhoPhi, k_)
-      //- fvm::laplacian(DkEff(), k_)
       - fvm::laplacian(alpha*rho*DkEff(), k_)
      ==
-        //G
         alpha()*rho()*G
-      //- fvm::Sp(epsilon_/k_, k_)
       - fvm::Sp(alpha()*rho()*epsilon_()/k_(), k_)
       + kSource()
       + fvOptions(alpha, rho, k_)
