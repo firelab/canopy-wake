@@ -1,0 +1,6 @@
+inletBC/logProfileDissipationRateInlet/logProfileDissipationRateInletFvPatchScalarField.C
+inletBC/logProfileTurbulentKineticEnergyInlet/logProfileTurbulentKineticEnergyInletFvPatchScalarField.C
+inletBC/logProfileVelocityInlet/logProfileVelocityInletFvPatchVectorField.C
+
+
+LIB = $(FOAM_USER_LIBBIN)/libWindNinja

@@ -1,0 +1,81 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | 
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+Description
+    Writes graph data for specified fields along a line, specified by start
+    and end points.
+
+\*---------------------------------------------------------------------------*/
+
+
+
+// choice of variables
+fields  (U p k epsilon);
+
+
+// Sampling and I/O settings
+interpolationScheme cellPoint;
+setFormat   raw;
+setConfig
+{
+    // old Segerson case used uniform, midPoint, and midPointAndFace. When I used those, OpenFOAM 8 complained saying to use
+    // lineUniform instead of uniform, lineCell instead of midPoint, and lineCellFace instead of midPointAndFace
+    // axis seems to select the tilt from the origin. Using distance for axis seems better than trying to get it right
+    // for each and every case
+    // files seem to always be named xy, but that is probably because x and y are set, and z varies.
+    type    lineUniform;    //lineCell; lineUniform; // lineCell, lineCellFace
+    axis    distance;   // x, y, z, xyz, distance
+    nPoints 1000;       //100;
+}
+
+
+type            sets;
+libs            ("libsampling.so");
+
+writeControl    writeTime;
+
+sets
+(
+    line0x200y
+    {
+        $setConfig;
+        start (0 200  0);
+        end   (0 200 80);
+    }
+    line7o5x200y
+    {
+        $setConfig;
+        start (7.5 200  0);
+        end   (7.5 200 80);
+    }
+    line50x200y
+    {
+        $setConfig;
+        start (50 200  0);
+        end   (50 200 80);
+    }
+    line400x200y
+    {
+        $setConfig;
+        start (400 200  0);
+        end   (400 200 80);
+    }
+    line792o5x200y
+    {
+        $setConfig;
+        start (792.5 200  0);
+        end   (792.5 200 80);
+    }
+    line800x200y
+    {
+        $setConfig;
+        start (800 200  0);
+        end   (800 200 80);
+    }
+);
+
+// ************************************************************************* //
