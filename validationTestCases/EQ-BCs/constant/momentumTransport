@@ -19,13 +19,13 @@ simulationType RAS;
 
 RAS
 {
-    model           kEpsilon;
+    model           myWindNinjakEpsilon;
 
     turbulence      on;
 
     printCoeffs     on;
 	
-	kEpsilonCoeffs
+	myWindNinjakEpsilonCoeffs
 	{
 	    Cmu              0.09;
 	    C1               1.44;
