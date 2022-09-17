@@ -3,6 +3,7 @@ inletBCs/logProfileTurbulentKineticEnergyInlet/logProfileTurbulentKineticEnergyI
 inletBCs/logProfileVelocityInlet/logProfileVelocityInletFvPatchVectorField.C
 
 myEpsilonWallFunction/myEpsilonWallFunctionFvPatchScalarField.C
+myNutkAtmRoughWallFunction/myNutkAtmRoughWallFunctionFvPatchScalarField.C
 
 
 LIB = $(FOAM_USER_LIBBIN)/libWindNinja
