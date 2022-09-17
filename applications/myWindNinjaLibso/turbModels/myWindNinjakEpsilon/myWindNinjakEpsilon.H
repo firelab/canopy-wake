@@ -180,6 +180,24 @@ public:
         {
             return epsilon_;
         }
+        
+        
+        //- Return the Reynolds stress tensor [m^2/s^2]                 ( used to be R() )
+        virtual tmp<volSymmTensorField> sigma() const;
+        
+        //- Return the effective stress tensor                          ( used to be devRef(), and the comment used to include "including the laminar stress" )
+        virtual tmp<volSymmTensorField> devTau() const;
+
+        //- Return the source term for the momentum equation            ( used to be divDevReff() )
+        virtual tmp<fvVectorMatrix> divDevTau(volVectorField& U) const;
+
+        //- Return the source term for the momentum equation            ( used to be the other divDevRhoReff() )
+        virtual tmp<fvVectorMatrix> divDevTau
+        (
+            const volScalarField& rho,
+            volVectorField& U
+        ) const;
+        
 
         //- Solve the turbulence equations and correct the turbulence viscosity
         virtual void correct();
