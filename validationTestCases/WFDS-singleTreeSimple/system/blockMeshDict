@@ -1,0 +1,103 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+vertices
+(
+    (0     0   0)
+    (180   0   0)
+	(180  60   0)
+	(0    60   0)
+	(0     0  40)
+    (180   0  40)
+	(180  60  40)
+	(0    60  40)
+);
+
+// 1 m x 1 m x 1 m resolution
+// nx = Lx/dx = 180 m / 1 m = 180
+// ny = Ly/dy =  60 m / 1 m =  60
+// nz = Lz/dz =  40 m / 1 m =  40
+// ncells = nx*ny*nz = 180*60*40 = 432,000
+nxBlock 180;
+nyBlock 60;
+nzBlock 40;
+
+blocks
+(
+	hex (0 1 2 3 4 5 6 7) ($nxBlock $nyBlock $nzBlock) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    xMin
+	{
+		type patch;
+		faces
+		(
+			(0 4 7 3)
+		);
+	}
+	xMax
+	{
+		type patch;
+		faces
+		(
+			(1 2  6 5)
+		);
+	}
+	yMin
+	{
+		type patch;
+		faces
+		(
+			(0 4 5 1)
+		);
+	}
+	yMax
+	{
+		type patch;
+		faces
+		(
+			(2 6 7 3)
+		);
+	}
+
+	zMax
+	{
+		type patch;
+		faces
+		(
+			(4 7 6 5)
+		);
+	}
+
+	ground
+	{
+		type wall;
+		faces
+		(
+			(0 1 2 3)
+		);
+	}
+);
+
+// ************************************************************************* //

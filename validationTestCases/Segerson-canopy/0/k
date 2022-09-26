@@ -1,0 +1,66 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      k;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// approx k = 1.5*(I*U)^2 ; where I = 0.1. In my case k = 0.6997 to 0.6998 for the entire inlet domain edge. The average value is 0.69975
+// Using the formula here for the UfreeStream, I got k = 0.5710335, but it looks like it is better to use the value determined by the code
+// formula seen in Wind Around Buildings tutorial, explained here: https://cfd.direct/openfoam/user-guide/v9-cavity/#x5-340002.1.8
+kInlet          0.69975;
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform $kInlet;
+
+boundaryField
+{
+
+    xMin
+    {
+        type                    logProfileTurbulentKineticEnergyInlet;
+        UfreeStream             6.17;
+        uDirection              (1 0 0);
+        inputWindHeight_Veg     15;
+        z0                      0.06;
+        Rd                      0;
+        firstCellHeight         0.5;    // dz
+        //value                 uniform 0.69975;
+    }
+    xMax
+    {
+        type            zeroGradient;
+    }
+	yMin
+    {
+        type            zeroGradient;
+    }
+	yMax
+    {
+        type            zeroGradient;
+    }
+	zMax
+    {
+        type            zeroGradient;
+    }
+	
+    ground
+    {
+        type            kqRWallFunction;
+        value           uniform $kInlet;	//value           uniform 0.1;
+    }
+
+}
+
+
+// ************************************************************************* //

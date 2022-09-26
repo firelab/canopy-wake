@@ -1,0 +1,100 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues
+(
+    volScalarFieldValue  Cd 0
+    volScalarFieldValue LAD 0
+);
+
+regions
+(
+
+	// 1st crown layer, bottom crown layer
+    boxToCell
+    {
+        box (32 23 0) (45 36 3);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10
+        );
+    }
+	// 2nd crown layer
+    boxToCell
+    {
+        box (33 24 3) (44 35 6);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10
+        );
+    }
+	// 3rd crown layer
+    boxToCell
+    {
+        box (34 25 6) (43 34 9);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10
+        );
+    }
+	// 4th crown layer
+    boxToCell
+    {
+        box (35 26 9) (42 33 11);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10
+        );
+    }
+	// 5th crown layer
+    boxToCell
+    {
+        box (36 27 11) (41 32 13);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10
+        );
+    }
+	// 6th crown layer
+    boxToCell
+    {
+        box (37 28 13) (40 31 15);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10
+        );
+    }
+	// 7th crown layer, top crown layer, the point
+    boxToCell
+    {
+        box (38 29 15) (39 30 16);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10
+        );
+    }
+
+);
+
+
+// ************************************************************************* //

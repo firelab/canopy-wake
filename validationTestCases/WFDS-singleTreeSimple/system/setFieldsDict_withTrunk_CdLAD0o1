@@ -1,0 +1,111 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues
+(
+    volScalarFieldValue  Cd 0
+    volScalarFieldValue LAD 0
+);
+
+regions
+(
+	
+	// trunk
+    boxToCell
+    {
+        box (38 29 0) (40 31 6);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 0.2
+        );
+    }
+
+	// 1st crown layer, bottom crown layer
+    boxToCell
+    {
+        box (32 23 6) (45 36 9);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 0.2
+        );
+    }
+	// 2nd crown layer
+    boxToCell
+    {
+        box (33 24 9) (44 35 12);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 0.2
+        );
+    }
+	// 3rd crown layer
+    boxToCell
+    {
+        box (34 25 12) (43 34 15);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 0.2
+        );
+    }
+	// 4th crown layer
+    boxToCell
+    {
+        box (35 26 15) (42 33 17);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 0.2
+        );
+    }
+	// 5th crown layer
+    boxToCell
+    {
+        box (36 27 17) (41 32 19);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 0.2
+        );
+    }
+	// 6th crown layer
+    boxToCell
+    {
+        box (37 28 19) (40 31 21);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 0.2
+        );
+    }
+	// 7th crown layer, top crown layer, the point
+    boxToCell
+    {
+        box (38 29 21) (39 30 22);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 0.2
+        );
+    }
+
+);
+
+
+// ************************************************************************* //

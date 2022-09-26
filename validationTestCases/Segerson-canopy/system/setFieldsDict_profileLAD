@@ -1,0 +1,130 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues
+(
+    volScalarFieldValue Cd 0
+    volScalarFieldValue LAD 0
+);
+
+regions
+(
+
+	// 1st cell height, cell center value at 0.375 m
+	boxToCell
+    {
+        box (300 0 0) (1000 150 0.75);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.2
+            volScalarFieldValue LAD 0.075
+        );
+    }
+    // 2nd cell height, cell center value at 1.125 m
+	boxToCell
+    {
+        box (300 0 0.75) (1000 150 1.5);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.2
+            volScalarFieldValue LAD 0.125
+        );
+    }
+    // 3rd cell height, cell center value at 1.875 m
+	boxToCell
+    {
+        box (300 0 1.5) (1000 150 2.25);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.2
+            volScalarFieldValue LAD 0.25
+        );
+    }
+    // 4th cell height, cell center value at 2.625 m
+	boxToCell
+    {
+        box (300 0 2.25) (1000 150 3);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.2
+            volScalarFieldValue LAD 0.725
+        );
+    }
+    // 5th cell height, cell center value at 3.375 m
+	boxToCell
+    {
+        box (300 0 3) (1000 150 3.75);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.2
+            volScalarFieldValue LAD 1
+        );
+    }
+    // 6th cell height, cell center value at 4.125 m
+	boxToCell
+    {
+        box (300 0 3.75) (1000 150 4.5);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.2
+            volScalarFieldValue LAD 0.7
+        );
+    }
+    // 7th cell height, cell center value at 4.875 m
+	boxToCell
+    {
+        box (300 0 4.5) (1000 150 5.25);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.2
+            volScalarFieldValue LAD 0.35
+        );
+    }
+    // 8th cell height, cell center value at 5.625 m
+	boxToCell
+    {
+        box (300 0 5.25) (1000 150 6);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.2
+            volScalarFieldValue LAD 0.175
+        );
+    }
+    // 9th cell height, cell center value at 6.375 m
+	boxToCell
+    {
+        box (300 0 6) (1000 150 6.75);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.2
+            volScalarFieldValue LAD 0.1
+        );
+    }
+    // 10th cell height, cell center value at 7.125 m
+	boxToCell
+    {
+        box (300 0 6.75) (1000 150 7.5);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.2
+            volScalarFieldValue LAD 0.03
+        );
+    }
+
+);
+
+
+// ************************************************************************* //

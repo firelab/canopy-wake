@@ -1,0 +1,98 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+|  \\    /   O peration     | Version:  plus                                  |  
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+Description
+    Writes graph data for specified fields along a line, specified by start
+    and end points.
+
+\*---------------------------------------------------------------------------*/
+
+h 7.5;  // tree height
+
+// vertical profile y,z coordinates
+z1 0;
+z2 500;
+y  75;  // set to yMid, domain goes from 0 to 150 in y for this case
+
+// mast locations relative to the forest edge
+mast1_dist 254.25;  // -6.1h, but now 0h is shifted to be 300 m, so 300 m - 6.1*7.5 m = 300 m - 45.75 m = 254.25 m
+mast2_dist 300;     // 0h, but now 0h is shifted to be 300 m
+mast3_dist 327;     // 3.6h, but now 0h is shifted to be 300 m, so 300 m + 3.6*7.5 m = 300 m + 27 m = 327 m
+mast4_dist 408.75;  // 14.5h, but now 0h is shifted to be 300 m, so 300 m + 14.5*7.5 m = 300 m + 108.75 m = 408.75 m
+// used to only have inlet_x, which was set to be 5, but now -h is shifted to be 300 m, so is this 300 m + 5 m = 305 m? That doesn't make sense. 
+// Turns out they were missing the outlet profile as well. So I think what makes sense is to just do 5 m after domainXmin and 5 m before domainXmax
+// domainXmin is now 0 m instead of the original -300 m, domainXmax is now 1000 m instead of the original 700 m
+inlet_x 5;
+outlet_x 995;
+
+
+// choice of variables
+fields  (U p k epsilon);
+
+
+// Sampling and I/O settings
+interpolationScheme cellPoint;
+setFormat   raw;
+setConfig
+{
+    // old Segerson case used uniform, midPoint, and midPointAndFace. When I used those, OpenFOAM 8 complained saying to use
+    // lineUniform instead of uniform, lineCell instead of midPoint, and lineCellFace instead of midPointAndFace
+    // axis seems to select the tilt from the origin. Using distance for axis seems better than trying to get it right
+    // for each and every case
+    // files seem to always be named xy, but that is probably because x and y are set, and z varies.
+    type    lineUniform;    //lineCell; lineUniform; // lineCell, lineCellFace
+    axis    distance;   // x, y, z, xyz, distance
+    nPoints 2000;
+}
+
+
+type            sets;
+libs            ("libsampling.so");
+
+writeControl    writeTime;
+
+sets
+(
+    inlet_profile
+    {
+        $setConfig;
+        start ($inlet_x $y $z1);
+        end   ($inlet_x $y $z2);
+    }
+    outlet_profile
+    {
+        $setConfig;
+        start ($outlet_x $y $z1);
+        end   ($outlet_x $y $z2);
+    }
+    mast1
+    {
+        $setConfig;
+        start ($mast1_dist $y $z1);
+        end   ($mast1_dist $y $z2);
+    }
+    mast2
+    {
+        $setConfig;
+        start ($mast2_dist $y $z1);
+        end   ($mast2_dist $y $z2);
+    }
+    mast3
+    {
+        $setConfig;
+        start ($mast3_dist $y $z1);
+        end   ($mast3_dist $y $z2);
+    }
+    mast4
+    {
+        $setConfig;
+        start ($mast4_dist $y $z1);
+        end   ($mast4_dist $y $z2);
+    }
+);
+
+// ************************************************************************* //

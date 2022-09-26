@@ -1,0 +1,3 @@
+makeKinematicMomentumTransportModels.C
+
+LIB = $(FOAM_USER_LIBBIN)/libmyWindNinjaDragkEpsilon
