@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::myConeInjection
+    Foam::myIBHSConeInjection
 
 Description
     This injector injects particles in a number of cones. The user specifies a
@@ -31,56 +31,36 @@ Description
     at a point, in which case inner and outer diameters of the disc are also
     specified.
 
-    The velocity is specified either as constant, or it is calculated from an
-    injection pressure, or it is calculated from the injector mass flow rate
-    and a discharge coefficient; i.e.:
-
-    Constant velocity:
-    \f[
-    U = U_{constant}
-    \f]
-
-    Pressure driven velocity:
-    \f[
-    U = \sqrt{2(p_{injection} - p)/\rho}
-    \f]
-
-    Flow rate and discharge:
-    \f[
-    U = \dot{m}/(\rho A C_{discharge})
-    \f]
+    The velocity is specified either as constant, or it is calculated from a
+    normal distribution. Note that the normal distribution of velocity won't work
+    well for very low velocities, as it doesn't have a method to truncate the distribution
+    or to stop negative values from switching the direction of the distribution.
     
-    I have modified this function to make it work for myParCalcs. Specifically, I
-    made parcelsToInject() output the right number of particles/parcels when inputting
-    timeStart() and timeEnd(), even if simulations start out at different times
-    than the first time. I was also making an accessor function for the sizeDistribution
-    to allow myParCalcs to be able to generate a list of particle/parcel diameters,
-    but it turns out that stopped being required because it required a ton more stuff
-    to be accessible. So I left that addition, but commented out, just in case it could
-    be useful for the future.
-    
-    I also modified it to have an additional flow type, a normal distribution, to allow 
-    modifying Umag by a normal distribution.
+    I have modified this to now do a uniform distribution or a normal distribution of theta,
+    the half cone angle. The user specifies thetaDistributionType to be "uniform", or "normal",
+    where "uniform" is uses a uniform distribution between thetaInner and thetaOuter, and
+    "normal" does a normal distribution using a new variable sigma_theta instead of using 
+    thetaInner and thetaOuter.
 
 Usage
     \table
     Property        | Description                    | Required | Default
     position        | The injection position         | yes      |
     direction       | The injection direction        | yes      |
-    thetaInner      | The inner cone angle           | yes      |
-    thetaOuter      | The outer cone angle           | yes      |
+    thetaInner      | The inner cone angle           | yes      |           ignored if thetaDistributionType is "normal"
+    thetaOuter      | The outer cone angle           | yes      |           ignored if thetaDistributionType is "normal"
     injectionMethod | Inject at a point or on a disc | no       | point
     dInner          | The inner disc diameter        |\\
                                                if disc or flowRateAndDischarge |
     dInner          | The outer disc diameter        |\\
                                                if disc or flowRateAndDischarge |
-    flowType        | Inject with constantVelocity, pressureDrivenVelocity \\
-                                 or flowRateAndDischarge | no | constantVelocity
-    Umag            | The injection velocity         | if constantVelocity |
+    flowType        | Inject with constantVelocity \\
+                               or normalDistribution | no       | constantVelocity
+    Umag            | The injection velocity         | if constantVelocity or normalDistribution |
     sigma_u         | The standard deviation of velocity | if normalDistribution |
-    Pinj            | The injection pressure         |\\
-                                                     if pressureDrivenVelocity |
-    Cd              | The discharge coefficient      | if flowRateAndDischarge |
+    
+    thetaDistributionType | type of distribution to use for theta | yes |
+    sigma_theta     | the variance of the half cone angle theta | if thetaDistributionType is "normal" |
     \endtable
 
     Example specification:
@@ -90,7 +70,7 @@ Usage
     {
         model1
         {
-            type            myConeInjection;
+            type            myIBHSConeInjection;
 
             // Times
             SOI             0;
@@ -116,8 +96,8 @@ Usage
             // Geometry
             position        (-0.15 -0.1 0);
             direction       (1 0 0);
-            thetaInner      0;
-            thetaOuter      45;
+            thetaInner      0;  // not used if thetaDistributionType is "normal"
+            thetaOuter      45;  // not used if thetaDistributionType is "normal"
 
             // - Inject at a point
             injectionMethod point;
@@ -132,32 +112,33 @@ Usage
             // - Inject with constant velocity
             flowType        constantVelocity;
             Umag            1;
-            
+
             //// - Or, inject with a normal distribution of velocity speed
             ////   just uses a constantVelocity input, followed by a standard deviation of that velocity
             //flowType      normalDistribution;
             //Umag          1;  // takes 1 m/s as the mean
             //sigma_u       2;  // uses 2 m/s as the standard distribution. Assumes Umag large enough to avoid shifting into the negative velocities as no limit on the standard distribution
-
-            //// - Or, inject with flow rate and discharge coefficient
-            ////   This also requires massTotal, dInner and dOuter
-            //flowType        flowRateAndDischarge;
-            //Cd              0.9;
-
-            //// - Or, inject at a pressure
-            //flowType        pressureDrivenVelocity;
-            //Pinj            10e5;
+            
+            // Injection half angle theta distribution
+            
+            // - Use a uniform distribution
+            thetaDistributionType       uniform;
+            
+            //// - Or, use a normal distribution, requires specifying the variance of the injection half cone angle theta,
+            //// causes thetaInner and thetaOuter to be ignored
+            //thetaDistributionType      normal;
+            //sigma_theta                    10;
         }
     }
     \endverbatim
 
 SourceFiles
-    myConeInjection.C
+    myIBHSConeInjection.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef myConeInjection_H
-#define myConeInjection_H
+#ifndef myIBHSConeInjection_H
+#define myIBHSConeInjection_H
 
 #include "InjectionModel.H"
 #include "distributionModel.H"
@@ -169,11 +150,11 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                       Class myConeInjection Declaration
+                       Class myIBHSConeInjection Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class CloudType>
-class myConeInjection
+class myIBHSConeInjection
 :
     public InjectionModel<CloudType>
 {
@@ -190,9 +171,14 @@ public:
     enum flowType
     {
         ftConstantVelocity,
-        ftNormalDistribution,
-        ftPressureDrivenVelocity,
-        ftFlowRateAndDischarge
+        ftNormalDistribution
+    };
+    
+    // half cone angle theta distribution type enumeration
+    enum thetaDistributionType
+    {
+        uniform,
+        normal
     };
 
 
@@ -205,6 +191,9 @@ private:
 
         //- Flow type
         flowType flowType_;
+        
+        //- half cone angle theta distribution type
+        thetaDistributionType thetaDistributionType_;
 
         //- Position of the injector
         const TimeFunction1<vector> position_;
@@ -256,15 +245,17 @@ private:
 
             //- Parcel velocity [m/s]
             TimeFunction1<scalar> Umag_;
-            
+
             //- Standard deviation of velocity [m/s]
+            // set when flowType is normalDistribution
             scalar sigma_u_;
-
-            //- Discharge coefficient []
-            TimeFunction1<scalar> Cd_;
-
-            //- Injection pressure [Pa]
-            TimeFunction1<scalar> Pinj_;
+        
+        // theta distribution type variables
+            
+            //- the variance of the half cone angle theta
+            // set when thetaDistributionType is set to normal
+            // when this is used, thetaInner and thetaOuter are ignored
+            scalar sigma_theta_;
 
 
     // Private Member Functions
@@ -274,18 +265,21 @@ private:
 
         //- Set the injection flow type
         void setFlowType();
+        
+        //- set the theta distribution type
+        void setThetaDistributionType();
 
 
 public:
 
     //- Runtime type information
-    TypeName("myConeInjection");
+    TypeName("myIBHSConeInjection");
 
 
     // Constructors
 
         //- Construct from dictionary
-        myConeInjection
+        myIBHSConeInjection
         (
             const dictionary& dict,
             CloudType& owner,
@@ -293,32 +287,23 @@ public:
         );
 
         //- Construct copy
-        myConeInjection(const myConeInjection<CloudType>& im);
+        myIBHSConeInjection(const myIBHSConeInjection<CloudType>& im);
 
         //- Construct and return a clone
         virtual autoPtr<InjectionModel<CloudType>> clone() const
         {
             return autoPtr<InjectionModel<CloudType>>
             (
-                new myConeInjection<CloudType>(*this)
+                new myIBHSConeInjection<CloudType>(*this)
             );
         }
 
 
     //- Destructor
-    virtual ~myConeInjection();
+    virtual ~myIBHSConeInjection();
 
 
     // Member Functions
-        
-        // turns out this reference would only be used by InjectionModel.H,
-        // would have to put this into InjectionModel.H as a virtual function for it to work correctly
-        // to be accessed by whatever is calling the separate injection types using InjectionModel.H
-        // so I made it, this seems to be the right method, but it didn't work as expected, so I'm leaving
-        // it here commented out in case it becomes useful in the future, don't want to lose the work 
-        // I did to figure out this format.
-        ////- Return reference to the sizeDistribution
-        //inline distributionModel& sizeDistribution();
 
         //- Set injector locations when mesh is updated
         virtual void updateMesh();
@@ -373,7 +358,7 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #ifdef NoRepository
-    #include "myConeInjection.C"
+    #include "myIBHSConeInjection.C"
 #endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

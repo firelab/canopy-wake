@@ -133,7 +133,12 @@ Foam::scalar Foam::distributionModels::lognormal::maxValue() const
 
 Foam::scalar Foam::distributionModels::lognormal::meanValue() const
 {
-    return expectation_;
+    // oops, I missed this in my first pass on the function
+    // see wikipedia for lognormal, not sure how this gets affected if values are truncated
+    // seems like none of the calls to mean for any of the distributions would be correct if the values are truncated.
+    //  So this isn't the correct for truncated, but at least it follows the methods done by other distribution models
+    //  so that they are all wrong together
+    return exp( expectation_ + 0.5*variance_*variance_ );
 }
 
 

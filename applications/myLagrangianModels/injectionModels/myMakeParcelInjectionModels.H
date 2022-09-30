@@ -29,12 +29,14 @@ License
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "myConeInjection.H"
+#include "myIBHSConeInjection.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #define myMakeParcelInjectionModels(CloudType)                                 \
                                                                                \
     makeInjectionModelType(myConeInjection, CloudType);                        \
+    makeInjectionModelType(myIBHSConeInjection, CloudType);                    \
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
