@@ -428,54 +428,64 @@ def main():
     pan_nParTotals, pan_massTotals,  pan_numDensities, pan_massFractions,  allPan_nParTotal, allPan_massTotal = calcPanMassFractions( latestTime_asString, casename,  par_rho,  nPans,  pan_xmins, pan_xmaxs, pans_ymin, pans_ymax )
     
     
-    ### now plot the nParTotals and massTotals information
+    ### need to derive the data from the original plots in the paper, hand pick the values so they can be plotted alongside my results
+    ### we are replicating figure 4.5 from HarrisHillary_Dec2011 "Analysis and Parameterization of the Flight of Ember Generation Experiments"
+    # first attempt
+    IBHSpaper_experimentalData = [0.135,0.065,0.066,0.072,0.052,0.051,0.0675,0.0525,0.0495,0.0495,0.0495,0.0493,0.065,0.038,0.025,0.02,0.035,0.0495]
+    IBHSpaper_modelData = [0.075,0.185,0.31,0.14,0.205,0.0025,0.015,0.0014,0.002,0.005,0.045,0.04,0.001,0.002,0.001,0.001,0.002,0.001]
+    # second attempt
+    IBHSpaper_experimentalData = [0.141,0.057,0.058,0.0695,0.052,0.051,0.0685,0.0565,0.0495,0.0485,0.049,0.0483,0.068,0.048,0.023,0.021,0.031,0.049]
+    IBHSpaper_modelData = [0.074,0.196,0.3025,0.0525,0.2035,0.0155,0.014,0.0114,0.004,0.007,0.0395,0.026,0.001,0.003,0.0005,0.001,0.0036,0.001]
+    # third attempt
+    IBHSpaper_experimentalData = [0.14025,0.057,0.058,0.0645,0.052,0.051,0.06375,0.05635,0.0494,0.0484,0.0489,0.0482,0.0639,0.0479,0.021,0.018,0.024,0.048]
+    IBHSpaper_modelData = [0.0685,0.194,0.3055,0.054,0.203,0.018,0.0138,0.0111,0.0039,0.007,0.041,0.0146,0.00145,0.003,0.00075,0.0015,0.00505,0.00125]
+    
+    
+    
+    ### now plot the mass fraction information, just the hand picked data to compare against, to try to replicate figure 4.5, before adding in our data, to make sure the data looks right
     plt.rc('figure', figsize=(18, 10))  # set the figure size (in inches)
-    fig1, (ax1, ax2) = plt.subplots(1, 2)
+    fig1, (ax1) = plt.subplots(1, 1)
     
-    ax1.plot(pan_xcenters, pan_nParTotals, 'D', label='nParTotals', clip_on=False)
+    ax1.plot(pan_xcenters, IBHSpaper_experimentalData, label='Exp. Data', color='blue', markeredgecolor='blue', marker='s', linestyle='None', markersize=13,markeredgewidth=2.25, clip_on=False)
+    ax1.plot(pan_xcenters, IBHSpaper_modelData, label='Model Data', color='green', markeredgecolor='green', marker='^', linestyle='None', markersize=13,markeredgewidth=2.25, clip_on=False)
     ax1.minorticks_on()
-    ax1.legend(loc='best', shadow=True)
-    ax1.set_xlabel('distance downwind, x [m]')
-    ax1.set_ylabel('nPars [-]')
-    ax1.set_title('pan nParTotals')
-    ax1.grid(True)
+    ax1.tick_params(axis='x', labelsize=22, pad=7)
+    ax1.tick_params(axis='y', labelsize=22, pad=4)
+    ax1.tick_params(axis="x", length=4.25, width=1.3)
+    ax1.tick_params(axis="y", length=4.25, width=1.3)
+    ax1.legend(loc='best', shadow=True, fontsize=24)
+    ax1.set_xlabel('Distance Downwind, x (m)', fontsize=24)
+    ax1.set_ylabel('Mass Fraction [-]', fontsize=24)
+    ax1.set_title('Mass Fraction vs. Dist.', fontsize=24)
+    ax1.grid(b=True)
     
-    ax2.plot(pan_xcenters, pan_massTotals, 'D', label='massTotals', clip_on=False)
-    ax2.minorticks_on()
-    ax2.legend(loc='best', shadow=True)
-    ax2.set_xlabel('distance downwind, x [m]')
-    ax2.set_ylabel('mass [kg]')
-    ax2.set_title('pan massTotals')
-    ax2.grid(b=True)
+    fig1.tight_layout(rect=[0.001,0.001,0.999, 0.999])
     
-    fig1.tight_layout(rect=[0.02,0.02,0.98, 0.98])
-    
-    plt.savefig(casename + '/zz_pictures/zz_panTotals.png')
+    plt.savefig(casename + '/zz_pictures/zz_replicateFig4o5.png')
     
     plt.show()
     
     
-    ### now plot the mass fraction information
+    
+    ### now plot the mass fraction information, all the data and plots together
     plt.rc('figure', figsize=(18, 10))  # set the figure size (in inches)
-    fig2, (ax1, ax2) = plt.subplots(1, 2)
+    fig2, (ax1) = plt.subplots(1, 1)
     
-    ax1.plot(pan_xcenters, pan_numDensities, 'D', label='numberDensities', clip_on=False)
+    ax1.plot(pan_xcenters, IBHSpaper_experimentalData, label='IBHS Exp. Data', color='blue', markeredgecolor='blue', marker='s', linestyle='None', markersize=13,markeredgewidth=2.25, clip_on=False)
+    ax1.plot(pan_xcenters, IBHSpaper_modelData, label='IBHS Model Data', color='green', markeredgecolor='green', marker='^', linestyle='None', markersize=13,markeredgewidth=2.25, clip_on=False)
+    ax1.plot(pan_xcenters, pan_massFractions, label='OpenFOAM Par Model', color='orange', markeredgecolor='orange', marker='x', linestyle='None', markersize=13,markeredgewidth=2.25, clip_on=False)
     ax1.minorticks_on()
-    ax1.legend(loc='best', shadow=True)
-    ax1.set_xlabel('distance downwind, x [m]')
-    ax1.set_ylabel('numDensity [-]')
-    ax1.set_title('pan number densities')
-    ax1.grid(True)
+    ax1.tick_params(axis='x', labelsize=22, pad=7)
+    ax1.tick_params(axis='y', labelsize=22, pad=4)
+    ax1.tick_params(axis="x", length=4.25, width=1.3)
+    ax1.tick_params(axis="y", length=4.25, width=1.3)
+    ax1.legend(loc='best', shadow=True, fontsize=24)
+    ax1.set_xlabel('Distance Downwind, x (m)', fontsize=24)
+    ax1.set_ylabel('Mass Fraction [-]', fontsize=24)
+    #ax1.set_title('Pan Mass Fractions', fontsize=24)
+    ax1.grid(b=True)
     
-    ax2.plot(pan_xcenters, pan_massFractions, 'D', label='massFractions', clip_on=False)
-    ax2.minorticks_on()
-    ax2.legend(loc='best', shadow=True)
-    ax2.set_xlabel('distance downwind, x [m]')
-    ax2.set_ylabel('massFraction [-]')
-    ax2.set_title('pan mass fractions')
-    ax2.grid(b=True)
-    
-    fig2.tight_layout(rect=[0.02,0.02,0.98, 0.98])
+    fig2.tight_layout(rect=[0.001,0.001,0.999, 0.999])
     
     plt.savefig(casename + '/zz_pictures/zz_panMassFractions.png')
     
