@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      k;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// approx k = 1.5*(I*U)^2 ; where I = 0.1. In my case U = 8.94 m/s for the entire inlet domain edge
+// formula seen in Wind Around Buildings tutorial, explained here: https://cfd.direct/openfoam/user-guide/v9-cavity/#x5-340002.1.8
+kInlet          1.198854;
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform $kInlet;
+
+boundaryField
+{
+
+    xMin
+    {
+        type            fixedValue;
+        value           uniform $kInlet;
+    }
+    xMax
+    {
+        type            zeroGradient;
+    }
+	yMin
+    {
+        type            zeroGradient;
+    }
+	yMax
+    {
+        type            zeroGradient;
+    }
+	zMax
+    {
+        type            zeroGradient;
+    }
+	
+    ground
+    {
+        type            kqRWallFunction;
+        value           uniform $kInlet;
+    }
+
+}
+
+
+// ************************************************************************* //

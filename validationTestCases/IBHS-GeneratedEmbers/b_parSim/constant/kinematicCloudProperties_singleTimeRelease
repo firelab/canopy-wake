@@ -1,0 +1,256 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      kinematicCloudProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solution
+{
+    active          true;
+    coupled         false;
+    transient       yes;
+    cellValueSourceCorrection off;
+    
+    integrationSchemes
+    {
+        U               Euler;
+    }
+    
+    interpolationSchemes
+    {
+        rho             cell;
+        U               cellPoint;
+        mu              cell;
+    }
+}
+
+constantProperties
+{
+    rho0            300;
+}
+
+subModels
+{
+    particleForces
+    {
+        sphereDrag;
+        gravity;
+    }
+
+    injectionModels
+    {
+        model1
+        {
+            type                myIBHSConeInjection;        //myConeInjection;//myIBHSConeInjection;
+            
+            // time information
+            SOI                 0;  // time to delay before releasing particles. Is messed up and doesn't work if starting at a time directory greater than 0.
+            duration            0.01;   // amount of time over which to do the release. Splits up the number of parcels and mass over the time of release, but this is messed up when starting with a time directory greater than 0. Instantaneous release, seems you need to use the timestep as the value for a one time release.
+            
+            // quantity information
+            massTotal           10;  // <-- not used with these settings. SAYS IT IS SET TO DO NOTHING IF USING parcelBasisType fixed. At one point in time I was using it for the mass fraction calculations. In the IBHS paper, taking 0.1 m^3 of material with an assumed average density of 300 kg/m^3, this comes out to be 30 kg of material total. This seems really high to me, the pictures of the machine feed seem to be about as big as the box of wood chips and bark we had back home, which weighed maybe 20 lbs, maybe barely 30 lbs, not 66 lbs as this calculation comes out to be.    The paper says 0.007 m^3 was 275 gms of each size of rod, assuming equal density for rods, this comes out to 0.825 kg/0.007 m^3 so ~117.857 kg/m^3, would mean roughly 1/4th of the rods were large rods, 1/3 to 1/2 were medium sized rods, and 1/2 to 2/3 were small rods. The rest of the material was bark and shredded mulch, bark seems to be a density of 240 kg/m^3. Shredded mulch looks to come in bags about twice to three times the size of what would be needed for the feed, weighing 20 lbs dry 40 lbs wet, looks like the density goes from 300 kg/m^3 to 500 kg/m^3. So an average density of 300 kg/m^3 makes sense. What doesn't make sense is 30 kg of material, though maybe the mulch makes that weight go up quite a bit cause it would fill in all the gaps from the other stuff. In the end, this value is probably close enough.   Technically it is 30 kg total, the particles are split up to be 80,000, 60,000 and 50,000 for the three different releases, at total of 190,000 particles. So 42.1052631579 % for the 80,000 particle release, 31.5789473684 % for the 60,000 particle release, 26.3157894737 % for the 50,000 particle release. This gives corresponding masses of 12.6315789474 kg, 9.47368421053 kg, and 7.89473684211 kg for each release. This is probably a bit off because it should have been an equal amount for each compartment, plus the number of particles was always a bit off for each section, also this number of particles doesn't make sense for 15 to 20 minute release, it is a scaled version of the experiment. So I guess use 10 kg just to be safe. Luckily this value isn't really used.
+            parcelBasisType     fixed;  // determines the method for calculating nParticles. Fixed means you choose nParticles. The other options calculate it using combinations of total mass, particle mass, particle volume, total volume.
+            parcelsPerSecond    8000000;  // Release for 0.01 seconds, but this is a parcels per 1 second. 80,000/0.01 = 8,000,000.  Notice that the algorythm can randomly add an extra parcel.
+            flowRateProfile     constant 1; // is this even used? I'm still not fully understanding how this is used or how it affects things. It seems related to parcelsToInject, like the volume equivalent version of it, but I still don't understand it. It seems to only matter when parcelBasisType is not set to fixed, and seems separate from the volumeTotal of the particles themselves.
+            nParticle           1;  // the number of particles per parcel. Seems like a mass per parcel almost, indirectly? But only if the solver is meant to do that type of calculation, this solver doesn't use this method, seems to ignore particles and just works with parcels.
+            
+            // size information
+            sizeDistribution
+            {
+                type        normal;
+                normalDistribution
+                {
+                    minValue     0.001; //0.001 m is 1 mm or 1,000 micrometers
+                    maxValue     0.030; //0.03 m is 30 mm
+                    expectation  0.01;   //this is the mean, mu
+                    variance     0.015;   //this is the standard deviation, sigma. Notice that sigma^2 is technically the variance, I think it is named wrong in the code
+                }
+                /*
+                type        lognormal;
+                lognormalDistribution
+                {
+                    //minValue     0.00000001; // effectively 0 to infinity, no bounds
+                    //maxValue     9999999999; // effectively 0 to infinity, no bounds
+                    minValue     0.001; //0.001 m is 1 mm or 1,000 micrometers
+                    maxValue     0.030; //0.03 m is 30 mm
+                    expectation  -3.2811;   //this is the mean, mu
+                    variance     0.94289;   //this is the standard deviation, sigma. Notice that sigma^2 is technically the variance, I think it is named wrong in the code
+                }
+                */
+            }
+            
+            // geometry information
+            position            (0.0762 4.572 1.9304);  // (0.25 ft, 15 ft, 6 1/3 ft). Behaves like the cell center of the disk in the x and y dirs, but the start point of the disk in the z dir. I want it to go from 6 2/6 ft to 6 3/6 ft in z, this assumes the original 0.5 ft diameter outlet goes from 6 ft to 6.5 ft.
+            direction           (1 0 1);    // determines the base launch angle, in this case it is 45 degrees
+            thetaInner          0;      // determines the minimum value of departure in both directions from the chosen launch angle (if greater than zero, results in a donut-like injection, if less than zero, behaves strangely)
+            thetaOuter          10;     // determines the maximum value of departure in both directions from the chosen launch angle. A value greater than 45 degrees starts to cause troubles for the solver. Unfortunately this is chosen to be a uniform distribution instead of a standard distribution. As the standard deviation from the paper is 10 degrees, it means that velocities get to ~3.5 sigma, or 35 degrees in each direction, but choosing 35 degrees floods the release with tons of particles where there are normally only a few. Choosing 25 degrees, or 20 degrees as the value gives a more realistic amount of particles for a given region, but it doesn't capture the effect of particles going out at the larger angles. So I chose a value of 30 degrees to get the best of both worlds. But then that value was WAY TOO BIG when looking at the resulting simulations, so I'm trying out 10 instead.
+            
+            // injection method and vars
+            injectionMethod     disc;
+            dInner              0; // 0 ft. This is the inner diameter of the disk (if not zero, you get a donut)
+            dOuter              0.0254; // 1/12 ft. This is the outer diameter of the disk. Well, it's behaving like a radius for some odd reason, so I halved the value from 1/6 ft to 1/12 ft. This is 1/3rd the size of a 0.5 ft diameter.
+            
+            // velocity method and vars
+            flowType            normalDistribution;     //constantVelocity;//normalDistribution;
+            Umag                9;  // the velocity at the input angle, will be varied with variance in the injection angle. If flowType is set to normalDistribution instead of constantVelocity, sigma_u is required and this value will also be varied with variance in the velocity
+            sigma_u             2;//1;  // the standard distribution of velocity. Assumes Umag large enough to avoid shifting into the negative velocities as no limit on the standard distribution
+            
+            // injection half angle theta distribution method and vars
+            thetaDistributionType       normal;     //uniform;//normal;
+            sigma_theta                 10;//5;
+        }
+        model2
+        {
+            type                myIBHSConeInjection;        //myConeInjection;//myIBHSConeInjection;
+            
+            // time information
+            SOI                 0;  // time to delay before releasing particles. Is messed up and doesn't work if starting at a time directory greater than 0.
+            duration            0.01;   // amount of time over which to do the release. Splits up the number of parcels and mass over the time of release, but this is messed up when starting with a time directory greater than 0. Instantaneous release, seems you need to use the timestep as the value for a one time release.
+            
+            // quantity information
+            massTotal           10;  // <-- not used with these settings. SAYS IT IS SET TO DO NOTHING IF USING parcelBasisType fixed. At one point in time I was using it for the mass fraction calculations. In the IBHS paper, taking 0.1 m^3 of material with an assumed average density of 300 kg/m^3, this comes out to be 30 kg of material total. This seems really high to me, the pictures of the machine feed seem to be about as big as the box of wood chips and bark we had back home, which weighed maybe 20 lbs, maybe barely 30 lbs, not 66 lbs as this calculation comes out to be.    The paper says 0.007 m^3 was 275 gms of each size of rod, assuming equal density for rods, this comes out to 0.825 kg/0.007 m^3 so ~117.857 kg/m^3, would mean roughly 1/4th of the rods were large rods, 1/3 to 1/2 were medium sized rods, and 1/2 to 2/3 were small rods. The rest of the material was bark and shredded mulch, bark seems to be a density of 240 kg/m^3. Shredded mulch looks to come in bags about twice to three times the size of what would be needed for the feed, weighing 20 lbs dry 40 lbs wet, looks like the density goes from 300 kg/m^3 to 500 kg/m^3. So an average density of 300 kg/m^3 makes sense. What doesn't make sense is 30 kg of material, though maybe the mulch makes that weight go up quite a bit cause it would fill in all the gaps from the other stuff. In the end, this value is probably close enough.   Technically it is 30 kg total, the particles are split up to be 80,000, 60,000 and 50,000 for the three different releases, at total of 190,000 particles. So 42.1052631579 % for the 80,000 particle release, 31.5789473684 % for the 60,000 particle release, 26.3157894737 % for the 50,000 particle release. This gives corresponding masses of 12.6315789474 kg, 9.47368421053 kg, and 7.89473684211 kg for each release. This is probably a bit off because it should have been an equal amount for each compartment, plus the number of particles was always a bit off for each section, also this number of particles doesn't make sense for 15 to 20 minute release, it is a scaled version of the experiment. So I guess use 10 kg just to be safe. Luckily this value isn't really used.
+            parcelBasisType     fixed;  // determines the method for calculating nParticles. Fixed means you choose nParticles. The other options calculate it using combinations of total mass, particle mass, particle volume, total volume.
+            parcelsPerSecond    6000000;  // Release for 0.01 seconds, but this is a parcels per 1 second. 60,000/0.01 = 6,000,000.  Notice that the algorythm can randomly add an extra parcel.
+            flowRateProfile     constant 1; // is this even used? I'm still not fully understanding how this is used or how it affects things. It seems related to parcelsToInject, like the volume equivalent version of it, but I still don't understand it. It seems to only matter when parcelBasisType is not set to fixed, and seems separate from the volumeTotal of the particles themselves.
+            nParticle           1;  // the number of particles per parcel. Seems like a mass per parcel almost, indirectly? But only if the solver is meant to do that type of calculation, this solver doesn't use this method, seems to ignore particles and just works with parcels.
+            
+            // size information
+            sizeDistribution
+            {
+                type        normal;
+                normalDistribution
+                {
+                    minValue     0.001; //0.001 m is 1 mm or 1,000 micrometers
+                    maxValue     0.030; //0.03 m is 30 mm
+                    expectation  0.01;   //this is the mean, mu
+                    variance     0.015;   //this is the standard deviation, sigma. Notice that sigma^2 is technically the variance, I think it is named wrong in the code
+                }
+                /*
+                type        lognormal;
+                lognormalDistribution
+                {
+                    //minValue     0.00000001; // effectively 0 to infinity, no bounds
+                    //maxValue     9999999999; // effectively 0 to infinity, no bounds
+                    minValue     0.001; //0.001 m is 1 mm or 1,000 micrometers
+                    maxValue     0.030; //0.03 m is 30 mm
+                    expectation  -3.2811;   //this is the mean, mu
+                    variance     0.94289;   //this is the standard deviation, sigma. Notice that sigma^2 is technically the variance, I think it is named wrong in the code
+                }
+                */
+            }
+            
+            // geometry information
+            position            (0.0762 4.572 3.4544);  // (0.25 ft, 15 ft, 11 1/3 ft). Behaves like the cell center of the disk in the x and y dirs, but the start point of the disk in the z dir. I want it to go from 11 2/6 ft to 11 3/6 ft in z, this assumes the original 0.5 ft diameter outlet goes from 11 ft to 11.5 ft.
+            direction           (1 0 1);    // determines the base launch angle, in this case it is 45 degrees
+            thetaInner          0;      // determines the minimum value of departure in both directions from the chosen launch angle (if greater than zero, results in a donut-like injection, if less than zero, behaves strangely)
+            thetaOuter          10;     // determines the maximum value of departure in both directions from the chosen launch angle. A value greater than 45 degrees starts to cause troubles for the solver. Unfortunately this is chosen to be a uniform distribution instead of a standard distribution. As the standard deviation from the paper is 10 degrees, it means that velocities get to ~3.5 sigma, or 35 degrees in each direction, but choosing 35 degrees floods the release with tons of particles where there are normally only a few. Choosing 25 degrees, or 20 degrees as the value gives a more realistic amount of particles for a given region, but it doesn't capture the effect of particles going out at the larger angles. So I chose a value of 30 degrees to get the best of both worlds. But then that value was WAY TOO BIG when looking at the resulting simulations, so I'm trying out 10 instead.
+            
+            // injection method and vars
+            injectionMethod     disc;
+            dInner              0; // 0 ft. This is the inner diameter of the disk (if not zero, you get a donut)
+            dOuter              0.0254; // 1/12 ft. This is the outer diameter of the disk. Well, it's behaving like a radius for some odd reason, so I halved the value from 1/6 ft to 1/12 ft. This is 1/3rd the size of a 0.5 ft diameter.
+            
+            // velocity method and vars
+            flowType            normalDistribution;     //constantVelocity;//normalDistribution;
+            Umag                7.5;  // the velocity at the input angle, will be varied with variance in the injection angle. If flowType is set to normalDistribution instead of constantVelocity, sigma_u is required and this value will also be varied with variance in the velocity
+            sigma_u             2;//1;  // the standard distribution of velocity. Assumes Umag large enough to avoid shifting into the negative velocities as no limit on the standard distribution
+            
+            // injection half angle theta distribution method and vars
+            thetaDistributionType       normal;     //uniform;//normal;
+            sigma_theta                 10;//5;
+        }
+        model3
+        {
+            type                myIBHSConeInjection;        //myConeInjection;//myIBHSConeInjection;
+            
+            // time information
+            SOI                 0;  // time to delay before releasing particles. Is messed up and doesn't work if starting at a time directory greater than 0.
+            duration            0.01;   // amount of time over which to do the release. Splits up the number of parcels and mass over the time of release, but this is messed up when starting with a time directory greater than 0. Instantaneous release, seems you need to use the timestep as the value for a one time release.
+            
+            // quantity information
+            massTotal           10;  // <-- not used with these settings. SAYS IT IS SET TO DO NOTHING IF USING parcelBasisType fixed. At one point in time I was using it for the mass fraction calculations. In the IBHS paper, taking 0.1 m^3 of material with an assumed average density of 300 kg/m^3, this comes out to be 30 kg of material total. This seems really high to me, the pictures of the machine feed seem to be about as big as the box of wood chips and bark we had back home, which weighed maybe 20 lbs, maybe barely 30 lbs, not 66 lbs as this calculation comes out to be.    The paper says 0.007 m^3 was 275 gms of each size of rod, assuming equal density for rods, this comes out to 0.825 kg/0.007 m^3 so ~117.857 kg/m^3, would mean roughly 1/4th of the rods were large rods, 1/3 to 1/2 were medium sized rods, and 1/2 to 2/3 were small rods. The rest of the material was bark and shredded mulch, bark seems to be a density of 240 kg/m^3. Shredded mulch looks to come in bags about twice to three times the size of what would be needed for the feed, weighing 20 lbs dry 40 lbs wet, looks like the density goes from 300 kg/m^3 to 500 kg/m^3. So an average density of 300 kg/m^3 makes sense. What doesn't make sense is 30 kg of material, though maybe the mulch makes that weight go up quite a bit cause it would fill in all the gaps from the other stuff. In the end, this value is probably close enough.   Technically it is 30 kg total, the particles are split up to be 80,000, 60,000 and 50,000 for the three different releases, at total of 190,000 particles. So 42.1052631579 % for the 80,000 particle release, 31.5789473684 % for the 60,000 particle release, 26.3157894737 % for the 50,000 particle release. This gives corresponding masses of 12.6315789474 kg, 9.47368421053 kg, and 7.89473684211 kg for each release. This is probably a bit off because it should have been an equal amount for each compartment, plus the number of particles was always a bit off for each section, also this number of particles doesn't make sense for 15 to 20 minute release, it is a scaled version of the experiment. So I guess use 10 kg just to be safe. Luckily this value isn't really used.
+            parcelBasisType     fixed;  // determines the method for calculating nParticles. Fixed means you choose nParticles. The other options calculate it using combinations of total mass, particle mass, particle volume, total volume.
+            parcelsPerSecond    5000000;  // Release for 0.01 seconds, but this is a parcels per 1 second. 50,000/0.01 = 5,000,000.  Notice that the algorythm can randomly add an extra parcel.
+            flowRateProfile     constant 1; // is this even used? I'm still not fully understanding how this is used or how it affects things. It seems related to parcelsToInject, like the volume equivalent version of it, but I still don't understand it. It seems to only matter when parcelBasisType is not set to fixed, and seems separate from the volumeTotal of the particles themselves.
+            nParticle           1;  // the number of particles per parcel. Seems like a mass per parcel almost, indirectly? But only if the solver is meant to do that type of calculation, this solver doesn't use this method, seems to ignore particles and just works with parcels.
+            
+            // size information
+            sizeDistribution
+            {
+                type        normal;
+                normalDistribution
+                {
+                    minValue     0.001; //0.001 m is 1 mm or 1,000 micrometers
+                    maxValue     0.030; //0.03 m is 30 mm
+                    expectation  0.01;   //this is the mean, mu
+                    variance     0.015;   //this is the standard deviation, sigma. Notice that sigma^2 is technically the variance, I think it is named wrong in the code
+                }
+                /*
+                type        lognormal;
+                lognormalDistribution
+                {
+                    //minValue     0.00000001; // effectively 0 to infinity, no bounds
+                    //maxValue     9999999999; // effectively 0 to infinity, no bounds
+                    minValue     0.001; //0.001 m is 1 mm or 1,000 micrometers
+                    maxValue     0.030; //0.03 m is 30 mm
+                    expectation  -3.2811;   //this is the mean, mu
+                    variance     0.94289;   //this is the standard deviation, sigma. Notice that sigma^2 is technically the variance, I think it is named wrong in the code
+                }
+                */
+            }
+            
+            // geometry information
+            position            (0.0762 4.572 6.5024);  // (0.25 ft, 15 ft, 21 1/3 ft). Behaves like the cell center of the disk in the x and y dirs, but the start point of the disk in the z dir. I want it to go from 21 2/6 ft to 21 3/6 ft in z, this assumes the original 0.5 ft diameter outlet goes from 21 ft to 21.5 ft.
+            direction           (1 0 1);    // determines the base launch angle, in this case it is 45 degrees
+            thetaInner          0;      // determines the minimum value of departure in both directions from the chosen launch angle (if greater than zero, results in a donut-like injection, if less than zero, behaves strangely)
+            thetaOuter          10;     // determines the maximum value of departure in both directions from the chosen launch angle. A value greater than 45 degrees starts to cause troubles for the solver. Unfortunately this is chosen to be a uniform distribution instead of a standard distribution. As the standard deviation from the paper is 10 degrees, it means that velocities get to ~3.5 sigma, or 35 degrees in each direction, but choosing 35 degrees floods the release with tons of particles where there are normally only a few. Choosing 25 degrees, or 20 degrees as the value gives a more realistic amount of particles for a given region, but it doesn't capture the effect of particles going out at the larger angles. So I chose a value of 30 degrees to get the best of both worlds. But then that value was WAY TOO BIG when looking at the resulting simulations, so I'm trying out 10 instead.
+            
+            // injection method and vars
+            injectionMethod     disc;
+            dInner              0; // 0 ft. This is the inner diameter of the disk (if not zero, you get a donut)
+            dOuter              0.0254; // 1/12 ft. This is the outer diameter of the disk. Well, it's behaving like a radius for some odd reason, so I halved the value from 1/6 ft to 1/12 ft. This is 1/3rd the size of a 0.5 ft diameter.
+            
+            // velocity method and vars
+            flowType            normalDistribution;     //constantVelocity;//normalDistribution;
+            Umag                6;  // the velocity at the input angle, will be varied with variance in the injection angle. If flowType is set to normalDistribution instead of constantVelocity, sigma_u is required and this value will also be varied with variance in the velocity
+            sigma_u             2;//1;  // the standard distribution of velocity. Assumes Umag large enough to avoid shifting into the negative velocities as no limit on the standard distribution
+            
+            // injection half angle theta distribution method and vars
+            thetaDistributionType       normal;     //uniform;//normal;
+            sigma_theta                 10;//5;
+        }
+    }
+
+    dispersionModel myStochasticDispersionRAS;//stochasticDispersionRAS//gradientDispersionRAS;//none;
+    patchInteractionModel standardWallInteraction;
+        standardWallInteractionCoeffs
+        {
+            type stick;//rebound;//stick;//escape;
+        }
+    stochasticCollisionModel none;  // options for particleFoam are only none
+    surfaceFilmModel none;  // options for particleFoam are only none
+    collisionModel none;  // options for particleFoam are only none or pairCollision. Runs way slower.
+}
+
+
+cloudFunctions
+{
+    //myParCalcs1
+    //{
+    //    type myParCalcs;
+    //}
+}
+
+
+// ************************************************************************* //

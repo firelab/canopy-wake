@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+Uinlet          (8.94 0 0);     // 20 mph
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+
+    xMin
+    {
+        type            fixedValue;
+        value           uniform $Uinlet;
+    }
+    xMax
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+	yMin
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+	yMax
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+	zMax
+    {
+        type            zeroGradient;
+    }
+
+    ground
+    {
+		type            fixedValue;
+        value           uniform (0 0 0);
+    }
+
+}
+
+// ************************************************************************* //
