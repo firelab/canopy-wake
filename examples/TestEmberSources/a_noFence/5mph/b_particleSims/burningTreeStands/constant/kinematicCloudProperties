@@ -1,0 +1,288 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      kinematicCloudProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solution
+{
+    active          true;
+    coupled         false;
+    transient       yes;
+    cellValueSourceCorrection off;
+    
+    integrationSchemes
+    {
+        U               Euler;
+    }
+    
+    interpolationSchemes
+    {
+        rho             cell;
+        U               cellPoint;
+        mu              cell;
+    }
+}
+
+constantProperties
+{
+    rho0            300;    //150;
+}
+
+subModels
+{
+    particleForces
+    {
+        sphereDrag;
+        gravity;
+    }
+
+    injectionModels
+    {
+        /*
+        model1
+        {
+            type                myIBHSConeInjection;
+            
+            // time information
+            SOI                 0;  // time to delay before releasing particles. Is messed up and doesn't work if starting at a time directory greater than 0.
+            duration            30;   // amount of time over which to do the release. Splits up the number of parcels and mass over the time of release, but this is messed up when starting with a time directory greater than 0. Instantaneous release, seems you need to use the timestep as the value for a one time release.   For this one, I want to release 50,000 parcels over 30 seconds.
+            
+            // quantity information
+            massTotal           0;  // <-- not used with these settings. SAYS IT IS SET TO DO NOTHING IF USING parcelBasisType fixed. Luckily this value isn't really used.
+            parcelBasisType     fixed;  // determines the method for calculating nParticles. Fixed means you choose nParticles. The other options calculate it using combinations of total mass, particle mass, particle volume, total volume.
+            parcelsPerSecond    1667;  // I want to release 50,000 parcels over 30 seconds, so 50,000/(30) = 1666.66666667 pars per second. Rounded up. This is 16 or 17 pars per 0.01 seconds, hopefully it is enough.  Notice that the algorythm can randomly add an extra parcel.
+            flowRateProfile     constant 1; // is this even used? I'm still not fully understanding how this is used or how it affects things. It seems related to parcelsToInject, like the volume equivalent version of it, but I still don't understand it. It seems to only matter when parcelBasisType is not set to fixed, and seems separate from the volumeTotal of the particles themselves.
+            nParticle           1;  // the number of particles per parcel. Seems like a mass per parcel almost, indirectly? But only if the solver is meant to do that type of calculation, this solver doesn't use this method, seems to ignore particles and just works with parcels.
+            
+            // size information
+            sizeDistribution
+            {
+                type        normal;
+                normalDistribution
+                {
+                    minValue     0.001; //0.001 m is 1 mm or 1,000 micrometers
+                    maxValue     0.030; //0.03 m is 30 mm
+                    expectation  0.01;   //this is the mean, mu
+                    variance     0.015;   //this is the standard deviation, sigma. Notice that sigma^2 is technically the variance, I think it is named wrong in the code
+                }
+            }
+            
+            // geometry information
+            position            (2 98.7552 1.8288);  // (6.56168 ft, 324 ft, 6 ft). Behaves like the cell center of the disk in the x and y dirs, but the start point of the disk in the z dir. I chose 2 m in the x direction, because that is close to the size of the largest plume which is 6 ft so 1.8288 m, and an even number in m makes it easier to do later calculations of downwind distances. I'm releasing at the center in the domain y dimension. I chose the height of 6 ft in z to represent a plume above a burning 3 ft or 4 ft vegetation object.
+            //direction           (1 0 0.70020753821);    // determines the base launch angle, in this case it is 35 degrees
+            //direction           (1 0 0.83909963117);    // determines the base launch angle, in this case it is 40 degrees
+            direction           (1 0 1);    // determines the base launch angle, in this case it is 45 degrees
+            //direction           (1 0 1.19175359259);    // determines the base launch angle, in this case it is 50 degrees
+            //direction           (1 0 1.42814800674);    // determines the base launch angle, in this case it is 55 degrees
+            thetaInner          0;      // determines the minimum value of departure in both directions from the chosen launch angle (if greater than zero, results in a donut-like injection, if less than zero, behaves strangely)
+            thetaOuter          5;     // determines the maximum value of departure in both directions from the chosen launch angle. A value greater than 45 degrees starts to cause troubles for the solver
+            
+            // injection method and vars
+            injectionMethod     disc;
+            dInner              0; // 0 ft. This is the inner diameter of the disk (if not zero, you get a donut)
+            dOuter              0.203201016; // 1.33333 ft. This is the outer diameter of the disk. Well, it's behaving like a radius for some odd reason, so I halved the value from 1.33333 ft to 0.66667 ft. This is the starting width of the plume above the burning vegetation object
+            
+            // velocity method and vars
+            flowType            constantVelocity;   //constantVelocity;//normalDistribution;
+            Umag                9;  // the velocity at the input angle, will be varied with variance in the injection angle
+            
+            // injection half angle theta distribution method and vars
+            thetaDistributionType       normal;     //uniform;//normal;
+            sigma_theta                 5;
+        }
+        */
+        /*
+        model2
+        {
+            type                myIBHSConeInjection;
+            
+            // time information
+            SOI                 0;  // time to delay before releasing particles. Is messed up and doesn't work if starting at a time directory greater than 0.
+            duration            30;   // amount of time over which to do the release. Splits up the number of parcels and mass over the time of release, but this is messed up when starting with a time directory greater than 0. Instantaneous release, seems you need to use the timestep as the value for a one time release.   For this one, I want to release 50,000 parcels over 30 seconds.
+            
+            // quantity information
+            massTotal           0;  // <-- not used with these settings. SAYS IT IS SET TO DO NOTHING IF USING parcelBasisType fixed. Luckily this value isn't really used.
+            parcelBasisType     fixed;  // determines the method for calculating nParticles. Fixed means you choose nParticles. The other options calculate it using combinations of total mass, particle mass, particle volume, total volume.
+            parcelsPerSecond    1667;  // I want to release 50,000 parcels over 30 seconds, so 50,000/(30) = 1666.66666667 pars per second. Rounded up. This is 16 or 17 pars per 0.01 seconds, hopefully it is enough.  Notice that the algorythm can randomly add an extra parcel.
+            flowRateProfile     constant 1; // is this even used? I'm still not fully understanding how this is used or how it affects things. It seems related to parcelsToInject, like the volume equivalent version of it, but I still don't understand it. It seems to only matter when parcelBasisType is not set to fixed, and seems separate from the volumeTotal of the particles themselves.
+            nParticle           1;  // the number of particles per parcel. Seems like a mass per parcel almost, indirectly? But only if the solver is meant to do that type of calculation, this solver doesn't use this method, seems to ignore particles and just works with parcels.
+            
+            // size information
+            sizeDistribution
+            {
+                type        normal;
+                normalDistribution
+                {
+                    minValue     0.001; //0.001 m is 1 mm or 1,000 micrometers
+                    maxValue     0.030; //0.03 m is 30 mm
+                    expectation  0.01;   //this is the mean, mu
+                    variance     0.015;   //this is the standard deviation, sigma. Notice that sigma^2 is technically the variance, I think it is named wrong in the code
+                }
+            }
+            
+            // geometry information
+            position            (2 98.7552 3.3528);  // (6.56168 ft, 324 ft, 11 ft). Behaves like the cell center of the disk in the x and y dirs, but the start point of the disk in the z dir. I chose 2 m in the x direction, because that is close to the size of the largest plume which is 6 ft so 1.8288 m, and an even number in m makes it easier to do later calculations of downwind distances. I'm releasing at the center in the domain y dimension. I chose the height of 11 ft in z to represent a plume above a burning 6 ft to 8 ft tree.
+            //direction           (1 0 0.70020753821);    // determines the base launch angle, in this case it is 35 degrees
+            //direction           (1 0 0.83909963117);    // determines the base launch angle, in this case it is 40 degrees
+            direction           (1 0 1);    // determines the base launch angle, in this case it is 45 degrees
+            //direction           (1 0 1.19175359259);    // determines the base launch angle, in this case it is 50 degrees
+            //direction           (1 0 1.42814800674);    // determines the base launch angle, in this case it is 55 degrees
+            thetaInner          0;      // determines the minimum value of departure in both directions from the chosen launch angle (if greater than zero, results in a donut-like injection, if less than zero, behaves strangely)
+            thetaOuter          5;     // determines the maximum value of departure in both directions from the chosen launch angle. A value greater than 45 degrees starts to cause troubles for the solver
+            
+            // injection method and vars
+            injectionMethod     disc;
+            dInner              0; // 0 ft. This is the inner diameter of the disk (if not zero, you get a donut)
+            dOuter              0.3048; // 2 ft. This is the outer diameter of the disk. Well, it's behaving like a radius for some odd reason, so I halved the value from 2 ft to 1 ft. This is the starting width of the plume above the burning vegetation object
+            
+            // velocity method and vars
+            flowType            constantVelocity;   //constantVelocity;//normalDistribution;
+            Umag                9;  // the velocity at the input angle, will be varied with variance in the injection angle
+            
+            // injection half angle theta distribution method and vars
+            thetaDistributionType       normal;     //uniform;//normal;
+            sigma_theta                 5;
+        }
+        */
+        
+        model3
+        {
+            type                myIBHSConeInjection;
+            
+            // time information
+            SOI                 0;  // time to delay before releasing particles. Is messed up and doesn't work if starting at a time directory greater than 0.
+            duration            30;   // amount of time over which to do the release. Splits up the number of parcels and mass over the time of release, but this is messed up when starting with a time directory greater than 0. Instantaneous release, seems you need to use the timestep as the value for a one time release.   For this one, I want to release 50,000 parcels over 30 seconds.
+            
+            // quantity information
+            massTotal           0;  // <-- not used with these settings. SAYS IT IS SET TO DO NOTHING IF USING parcelBasisType fixed. Luckily this value isn't really used.
+            parcelBasisType     fixed;  // determines the method for calculating nParticles. Fixed means you choose nParticles. The other options calculate it using combinations of total mass, particle mass, particle volume, total volume.
+            parcelsPerSecond    1667;  // I want to release 50,000 parcels over 30 seconds, so 50,000/(30) = 1666.66666667 pars per second. Rounded up. This is 16 or 17 pars per 0.01 seconds, hopefully it is enough.  Notice that the algorythm can randomly add an extra parcel.
+            flowRateProfile     constant 1; // is this even used? I'm still not fully understanding how this is used or how it affects things. It seems related to parcelsToInject, like the volume equivalent version of it, but I still don't understand it. It seems to only matter when parcelBasisType is not set to fixed, and seems separate from the volumeTotal of the particles themselves.
+            nParticle           1;  // the number of particles per parcel. Seems like a mass per parcel almost, indirectly? But only if the solver is meant to do that type of calculation, this solver doesn't use this method, seems to ignore particles and just works with parcels.
+            
+            // size information
+            sizeDistribution
+            {
+                type        normal;
+                normalDistribution
+                {
+                    minValue     0.001; //0.001 m is 1 mm or 1,000 micrometers
+                    maxValue     0.030; //0.03 m is 30 mm
+                    expectation  0.01;   //this is the mean, mu
+                    variance     0.015;   //this is the standard deviation, sigma. Notice that sigma^2 is technically the variance, I think it is named wrong in the code
+                }
+            }
+            
+            // geometry information
+            position            (2 98.7552 6.4008);  // (6.56168 ft, 324 ft, 21 ft). Behaves like the cell center of the disk in the x and y dirs, but the start point of the disk in the z dir. I chose 2 m in the x direction, because that is close to the size of the largest plume which is 6 ft so 1.8288 m, and an even number in m makes it easier to do later calculations of downwind distances. I'm releasing at the center in the domain y dimension. I chose the height of 21 ft in z to represent a plume above a burning 12 ft to 15 ft tree.
+            //direction           (1 0 0.70020753821);    // determines the base launch angle, in this case it is 35 degrees
+            //direction           (1 0 0.83909963117);    // determines the base launch angle, in this case it is 40 degrees
+            direction           (1 0 1);    // determines the base launch angle, in this case it is 45 degrees
+            //direction           (1 0 1.19175359259);    // determines the base launch angle, in this case it is 50 degrees
+            //direction           (1 0 1.42814800674);    // determines the base launch angle, in this case it is 55 degrees
+            thetaInner          0;      // determines the minimum value of departure in both directions from the chosen launch angle (if greater than zero, results in a donut-like injection, if less than zero, behaves strangely)
+            thetaOuter          5;     // determines the maximum value of departure in both directions from the chosen launch angle. A value greater than 45 degrees starts to cause troubles for the solver
+            
+            // injection method and vars
+            injectionMethod     disc;
+            dInner              0; // 0 ft. This is the inner diameter of the disk (if not zero, you get a donut)
+            dOuter              0.6096; // 4 ft. This is the outer diameter of the disk. Well, it's behaving like a radius for some odd reason, so I halved the value from 4 ft to 2 ft. This is the starting width of the plume above the burning vegetation object
+            
+            // velocity method and vars
+            flowType            constantVelocity;   //constantVelocity;//normalDistribution;
+            Umag                9;  // the velocity at the input angle, will be varied with variance in the injection angle
+            
+            // injection half angle theta distribution method and vars
+            thetaDistributionType       normal;     //uniform;//normal;
+            sigma_theta                 5;
+        }
+        
+        /*
+        model4
+        {
+            type                myIBHSConeInjection;
+            
+            // time information
+            SOI                 0;  // time to delay before releasing particles. Is messed up and doesn't work if starting at a time directory greater than 0.
+            duration            30;   // amount of time over which to do the release. Splits up the number of parcels and mass over the time of release, but this is messed up when starting with a time directory greater than 0. Instantaneous release, seems you need to use the timestep as the value for a one time release.   For this one, I want to release 50,000 parcels over 30 seconds.
+            
+            // quantity information
+            massTotal           0;  // <-- not used with these settings. SAYS IT IS SET TO DO NOTHING IF USING parcelBasisType fixed. Luckily this value isn't really used.
+            parcelBasisType     fixed;  // determines the method for calculating nParticles. Fixed means you choose nParticles. The other options calculate it using combinations of total mass, particle mass, particle volume, total volume.
+            parcelsPerSecond    1667;  // I want to release 50,000 parcels over 30 seconds, so 50,000/(30) = 1666.66666667 pars per second. Rounded up. This is 16 or 17 pars per 0.01 seconds, hopefully it is enough.  Notice that the algorythm can randomly add an extra parcel.
+            flowRateProfile     constant 1; // is this even used? I'm still not fully understanding how this is used or how it affects things. It seems related to parcelsToInject, like the volume equivalent version of it, but I still don't understand it. It seems to only matter when parcelBasisType is not set to fixed, and seems separate from the volumeTotal of the particles themselves.
+            nParticle           1;  // the number of particles per parcel. Seems like a mass per parcel almost, indirectly? But only if the solver is meant to do that type of calculation, this solver doesn't use this method, seems to ignore particles and just works with parcels.
+            
+            // size information
+            sizeDistribution
+            {
+                type        normal;
+                normalDistribution
+                {
+                    minValue     0.001; //0.001 m is 1 mm or 1,000 micrometers
+                    maxValue     0.030; //0.03 m is 30 mm
+                    expectation  0.01;   //this is the mean, mu
+                    variance     0.015;   //this is the standard deviation, sigma. Notice that sigma^2 is technically the variance, I think it is named wrong in the code
+                }
+            }
+            
+            // geometry information
+            position            (2 98.7552 9.448);  // (6.56168 ft, 324 ft, 31 ft). Behaves like the cell center of the disk in the x and y dirs, but the start point of the disk in the z dir. I chose 2 m in the x direction, because that is close to the size of the largest plume which is 6 ft so 1.8288 m, and an even number in m makes it easier to do later calculations of downwind distances. I'm releasing at the center in the domain y dimension. I chose the height of 31 ft in z to represent a plume above a burning 18 ft to 22 ft tree.
+            //direction           (1 0 0.70020753821);    // determines the base launch angle, in this case it is 35 degrees
+            //direction           (1 0 0.83909963117);    // determines the base launch angle, in this case it is 40 degrees
+            direction           (1 0 1);    // determines the base launch angle, in this case it is 45 degrees
+            //direction           (1 0 1.19175359259);    // determines the base launch angle, in this case it is 50 degrees
+            //direction           (1 0 1.42814800674);    // determines the base launch angle, in this case it is 55 degrees
+            thetaInner          0;      // determines the minimum value of departure in both directions from the chosen launch angle (if greater than zero, results in a donut-like injection, if less than zero, behaves strangely)
+            thetaOuter          5;     // determines the maximum value of departure in both directions from the chosen launch angle. A value greater than 45 degrees starts to cause troubles for the solver
+            
+            // injection method and vars
+            injectionMethod     disc;
+            dInner              0; // 0 ft. This is the inner diameter of the disk (if not zero, you get a donut)
+            dOuter              0.9144; // 6 ft. This is the outer diameter of the disk. Well, it's behaving like a radius for some odd reason, so I halved the value from 6 ft to 3 ft. This is the starting width of the plume above the burning vegetation object
+            
+            // velocity method and vars
+            flowType            constantVelocity;   //constantVelocity;//normalDistribution;
+            Umag                9;  // the velocity at the input angle, will be varied with variance in the injection angle
+            
+            // injection half angle theta distribution method and vars
+            thetaDistributionType       normal;     //uniform;//normal;
+            sigma_theta                 5;
+        }
+        */
+    }
+
+    dispersionModel myStochasticDispersionRAS;//stochasticDispersionRAS//gradientDispersionRAS;//none;
+    patchInteractionModel standardWallInteraction;
+        standardWallInteractionCoeffs
+        {
+            type stick;//rebound;//stick;//escape;
+        }
+    stochasticCollisionModel none;  // options for particleFoam are only none
+    surfaceFilmModel none;  // options for particleFoam are only none
+    collisionModel none;  // options for particleFoam are only none or pairCollision. Runs way slower.
+}
+
+
+cloudFunctions
+{
+    //myParCalcs1
+    //{
+    //    type myParCalcs;
+    //}
+}
+
+
+// ************************************************************************* //

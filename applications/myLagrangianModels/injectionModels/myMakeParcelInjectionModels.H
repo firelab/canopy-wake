@@ -30,6 +30,8 @@ License
 
 #include "myConeInjection.H"
 #include "myIBHSConeInjection.H"
+#include "myPatchInjection.H"
+#include "myCuboidInjection.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -37,6 +39,8 @@ License
                                                                                \
     makeInjectionModelType(myConeInjection, CloudType);                        \
     makeInjectionModelType(myIBHSConeInjection, CloudType);                    \
+    makeInjectionModelType(myPatchInjection, CloudType);                       \
+    makeInjectionModelType(myCuboidInjection, CloudType);                      \
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -1,0 +1,105 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+vertices
+(
+    // 576 ft x 648 ft x 144 ft (175.5648 m x 197.5104 m x 43.8912 m)
+    // note that 4 decimal places seems to reduce round off error when calculating the mesh resolution
+    (  0.0000    0.0000   0.0000)
+    (175.5648    0.0000   0.0000)
+	(175.5648  197.5104   0.0000)
+	(  0.0000  197.5104   0.0000)
+	(  0.0000    0.0000  43.8912)
+    (175.5648    0.0000  43.8912)
+	(175.5648  197.5104  43.8912)
+	(  0.0000  197.5104  43.8912)
+);
+
+// 3 ft x 3 ft x 3 ft resolution (0.9144 m x 0.9144 m x 0.9144 m)
+// nx = Lx/dx = 576 ft / 3 ft = 192
+// ny = Ly/dy = 648 ft / 3 ft = 216
+// nz = Lz/dz = 144 ft / 3 ft =  48
+// ncells = nx*ny*nz = 192*216*48 = 1,990,656 =~ 1.99 million cells
+nxBlock 192;
+nyBlock 216;
+nzBlock  48;
+
+blocks
+(
+	hex (0 1 2 3 4 5 6 7) ($nxBlock $nyBlock $nzBlock) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    xMin
+	{
+		type patch;
+		faces
+		(
+			(0 4 7 3)
+		);
+	}
+	xMax
+	{
+		type patch;
+		faces
+		(
+			(1 2  6 5)
+		);
+	}
+	yMin
+	{
+		type patch;
+		faces
+		(
+			(0 4 5 1)
+		);
+	}
+	yMax
+	{
+		type patch;
+		faces
+		(
+			(2 6 7 3)
+		);
+	}
+
+	zMax
+	{
+		type patch;
+		faces
+		(
+			(4 7 6 5)
+		);
+	}
+
+	ground
+	{
+		type wall;
+		faces
+		(
+			(0 1 2 3)
+		);
+	}
+);
+
+// ************************************************************************* //

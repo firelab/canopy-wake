@@ -1,0 +1,40 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues
+(
+    volScalarFieldValue Cd 0
+    volScalarFieldValue LAD 0
+);
+
+regions
+(
+	// 1st tree row
+	boxToCell
+    {
+        // a 18 ft x 288 ft x 18 ft fence (5.4864 m x 87.7824 m x 5.4864 m), representing a fence of full grown oak trees
+        // placed 180 ft downwind with 180 ft on each side (54.864 m downwind and 54.864 m on each side)
+        box ( 54.8640 54.8640 0.0000) ( 60.3504 142.6464 5.4864);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10
+        );
+    }
+);
+
+
+// ************************************************************************* //
