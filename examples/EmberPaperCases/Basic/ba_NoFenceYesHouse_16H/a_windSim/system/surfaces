@@ -1,0 +1,108 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+Description
+    Writes out surface files with interpolated field data in Raw or VTK format, e.g.
+    for cutting planes, iso-surfaces, patch boundary surfaces, triSurfaceMesh surfaces, etc.
+    
+    See /opt/openfoam8/src/sampling/sampledSurface/ for the various types of surfaces
+    and the header files of the various functions for examples of how to use them,
+    see /opt/openfoam8/etc/caseDicts/postProcessing/visualization/ for an example of
+    using the /opt/openfoam8/src/sampling/sampledSurface/ functions.
+    
+    This can be used as a runTime processing function, or as a post processing function.
+    See https://cfd.direct/openfoam/user-guide/v9-graphs-monitoring/#x33-2590006.3 for examples of runTime processing, a little bit of post processing,
+    see https://cfd.direct/openfoam/user-guide/v9-post-processing-cli/ for examples of post processing.
+
+\*---------------------------------------------------------------------------*/
+
+type            surfaces;
+libs            ("libsampling.so");
+
+writeControl    writeTime;
+
+surfaceFormat   raw;    //vtk;//raw;
+interpolationScheme cellPoint;  //cellPoint;//cell;
+
+// optionally define extra controls for the output formats
+formatOptions
+{
+    ensight
+    {
+        format  ascii;
+    }
+}
+
+
+fields          (k epsilon U p);
+
+
+// edit values according to blockMesh
+// dx = dy = dz = 3 ft = 0.9144 m
+// mesh width is 648 ft = 197.5104 m
+// so firstCellCenterHeight is 1.5 ft = 0.4572 m
+// secondCellCenterHeight is 4.5 ft = 1.3716 m
+// domainWidthCenter is 324 ft = 98.7552 m
+yp 98.7552;
+zp 1.3716;
+
+// useful values
+x (1 0 0);
+y (0 1 0);
+z (0 0 1);
+origin (0 0 0);
+
+
+surfaces
+(
+    ySlice98o7552
+    {
+        // Sampling on triSurface
+        type        triSurfaceMesh;
+        surface     ySlice0.stl;
+        source      cells;  // see /opt/openfoam8/src/sampling/sampledSurface/sampledTriSurfaceMesh/sampledTriSurfaceMesh.H for more options
+        interpolate yes;
+        source      insideCells;    // method to force it to be ignored if the surface is outside the domain. Old method here: https://www.cfd-online.com/Forums/openfoam-post-processing/139341-surface-sampling.html
+    }
+    
+    zSlice1o3716
+    {
+        // Sampling on triSurface
+        type        triSurfaceMesh;
+        surface     zSlice0.stl;
+        source      cells;  // see /opt/openfoam8/src/sampling/sampledSurface/sampledTriSurfaceMesh/sampledTriSurfaceMesh.H for more options
+        interpolate yes;
+        source      insideCells;    // method to force it to be ignored if the surface is outside the domain. Old method here: https://www.cfd-online.com/Forums/openfoam-post-processing/139341-surface-sampling.html
+    }
+);
+
+
+/*
+surfaces
+(
+    ySlice98o7552
+    {
+        type            cuttingPlane;
+        planeType       pointAndNormal;
+        interpolate     true;
+        basePoint       (0 $yp 0);
+        normalVector    (0 1 0);
+    }
+    
+    zSlice1o3716
+    {
+        type            cuttingPlane;
+        planeType       pointAndNormal;
+        interpolate     true;
+        basePoint       (0 0 $zp);
+        normalVector    (0 0 1);
+    }
+);
+*/
+
+
+// ************************************************************************* //

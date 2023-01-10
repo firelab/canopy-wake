@@ -1,0 +1,228 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      kinematicCloudProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solution
+{
+    active          true;
+    coupled         false;
+    transient       yes;
+    cellValueSourceCorrection off;
+    
+    integrationSchemes
+    {
+        U               Euler;
+    }
+    
+    interpolationSchemes
+    {
+        rho             cell;
+        U               cellPoint;
+        mu              cell;
+    }
+}
+
+constantProperties
+{
+    rho0            150;
+}
+
+subModels
+{
+    particleForces
+    {
+        sphereDrag;
+        gravity;
+    }
+
+    injectionModels
+    {
+        // 
+        // spherical particles of diameter 1 mm and density 150 kg/m^3 are to be injected into a rectangular area (a sheet of particles) as an instantaneous release,
+        // uniformly distributed at 25 pars/ft^2, where the rectangular area is placed 1H upwind of the vegetation fence, the rectangular area extending
+        // from the ground to 2H above the vegetation fence and to 1H on both sides of the vegetation fence, the vegetation fence being of size H x 4H x H, 
+        // the vegetation fence placed 10H downwind in x and right in the middle of the domain in y with 10H of empty space on each side, 
+        // where H is 72 ft.
+        // 
+        // because the simulation is instantaneous, duration is set to the simulation timestep
+        // duration = timestep = 0.01 seconds;
+        // 
+        // the area is ( 1H + 4H + 1H ) x ( 1H + 2H ) = 6H x 3H = 6*72ft x 3*72ft = 432 ft x 216 ft = 93,312 ft^2
+        // nPars = pars/area * area = 25 pars/ft^2 * 93,312 ft^2 = 2,332,800 pars. Hope this is doable
+        // 
+        // parcelsPerSecond = nPars/duration = 2,332,800 pars / 0.01 seconds = 233,280,000 pars/second;
+        // 
+        // setting the location of the rectangle requires calculating the min and max coordinates
+        // notice that xMin and xMax are equal, no other min and max are equal, collapsing the cuboid down to be a rectangle
+        // xMin = 10H - 1H = 9H = 9*72ft = 648 ft (197.5104 m)
+        // xMax = xMin (want a rectangle not a cube for the injection)
+        // yMin = 10H - 1H = 9H = 9*72ft = 648 ft (197.5104 m)
+        // yMax = yMin + 1H (amount on sides) + 4H (fence width) + 1H (amount on sides) = ...
+        //      = 9H (yMin) + 1H (amount on sides) + 4H (fence width) + 1H (amount on sides) = 15H = 15*72ft = 1080 ft (329.1840 m)
+        // zMin = 0H = 0*72ft = 0 ft (0 m)
+        // zMax = 1H (fence) + 2H (above fence) = 3H = 3*72ft = 216 ft (65.8368 m)
+        // 
+        // 
+        // 
+        // 
+        // A MAJOR REVISION. The desire is to do the same injection as the Base Case, so now it is 
+        // 
+        // spherical particles of diameter 1 mm and density 150 kg/m^3 are to be injected into a rectangular area (a sheet of particles) as an instantaneous release,
+        // uniformly distributed at 25 pars/ft^2, where the rectangular area is placed 1H_base upwind of the vegetation fence, the rectangular area extending
+        // from the ground to 2H_base above the base case vegetation fence and to 1H_base on both sides of the base case vegetation fence, the base case vegetation fence 
+        // being of size H_base x 16H_base x H_base, placed 10H_base downwind in x and right in the middle of the domain in y with 10H_base of empty space on each side
+        // for the base case, in this case the fence being of size H x 4H x H placed 10H downwind in x and right in the middle of the domain in y with 10H of empty space on each side, 
+        // where H is 72 ft and H_base is 18 ft, calculation of the locations is going to take a bit more work.
+        // 
+        // because the simulation is instantaneous, duration is set to the simulation timestep
+        // duration = timestep = 0.01 seconds;
+        // 
+        // the area of the injection (now extends greater upwind, to the sides, and above the current vegetation fence) 
+        // is ( 1H_base + 16H_base + 1H_base ) x ( 1H_base + 2H_base ) = 18H_base x 3H_base = 18*18ft x 3*18ft = 324 ft x 54 ft = 17,496 ft^2
+        // nPars = pars/area * area = 25 pars/ft^2 * 17,496 ft^2 = 437,400 pars
+        // 
+        // parcelsPerSecond = nPars/duration = 437,400 pars / 0.01 seconds = 43,740,000 pars/second;
+        // 
+        // 
+        // The fence is placed 10H downwind, the injection is now H_base instead of H upwind of the fence 
+        // so the injection is located at 10H - 1H_base
+        // the fence injection location in y is yMid - 1/2 fence width - H_base to yMid + 1/2 fence width + H_base
+        //  where yMid = yDomainMax / 2. yDomainMax = 10H + 4H (fence width) + 10H = 24H = 24*72 ft = 1,728 ft
+        //  so yMid = 864 ft (263.3472 m)
+        //  fence width is 288 ft (87.7824 m) so 1/2 fence width is 144 ft (43.8912 m)
+        //  probably easier to use the formula 10H - 1H_base to yMin + 1H_base + 4H (fence width) + 1H_base = yMin + 2H_base + 4H
+        //  nah, it's fine either way
+        // the fence now goes up to 3H_base instead of 3H in z (2H_base + 1H_base)
+        // 
+        // setting the location of the rectangle requires calculating the min and max coordinates
+        // notice that xMin and xMax are equal, no other min and max are equal, collapsing the cuboid down to be a rectangle
+        // xMin = 10H - 1H_base = 10*72ft - 1*18ft = 720 ft - 18 ft = 702 ft (213.9696 m)
+        // xMax = xMin (want a rectangle not a cube for the injection)
+        // yMin = 10H - 1H_base = 10*72ft - 1*18ft = 720 ft - 18 ft = 702 ft (213.9696 m)
+        // yMax = yMin + 1H_base (amount on sides) + 4H (fence width) + 1H_base (amount on sides) = ...
+        //      = 702 ft (yMin) + 1*18 ft (amount on sides) + 4*36 ft (fence width) + 1*18 ft (amount on sides) = 702 ft + 18 ft + 288 ft + 18 ft = 1,026 ft (312.7248 m)
+        // zMin = 0H = 0*36ft = 0 ft (0 m)
+        // zMax = 1H_base (fence) + 2H_base (above fence) = 3H_base = 3*18ft = 54 ft (16.4592 m)
+        // 
+        // the injection moved slightly closer to the fence, and extends up to a much smaller height, which is now slightly less than the fence, extending out to the sides a hint less
+        // with much fewer particles than the first attempt of this case.
+        // 
+        // 
+        
+        model1
+        {
+            type                myCuboidInjection;
+            
+            // time information
+            SOI                 0;  // time to delay before releasing particles. Is messed up and doesn't work if starting at a time directory greater than 0.
+            duration            0.01;   // amount of time over which to do the release. Splits up the number of parcels and mass over the time of release, but this is messed up when starting with a time directory greater than 0. Instantaneous release, seems you need to use the timestep as the value for a one time release. In this case I want an instantaneous release, so this value is set to the timestep value found in controlDict.
+            
+            // quantity information
+            massTotal           0;  // <-- not used with these settings. SAYS IT IS SET TO DO NOTHING IF USING parcelBasisType fixed. Luckily this value isn't really used.
+            parcelBasisType     fixed;  // determines the method for calculating nParticles. Fixed means you choose nParticles. The other options calculate it using combinations of total mass, particle mass, particle volume, total volume.
+            parcelsPerSecond    43740000;  // To get this number, take your desired total number of particles to be released by this injection and divide it by the duration of the injection to convert from nPars/x_seconds to nPars/1_second. So parcelsPerSecond = nPars/duration.  Notice that the algorythm can randomly add an extra parcel.
+            flowRateProfile     constant 1; // is this even used? I'm still not fully understanding how this is used or how it affects things. It seems related to parcelsToInject, like the volume equivalent version of it, but I still don't understand it. It seems to only matter when parcelBasisType is not set to fixed, and seems separate from the volumeTotal of the particles themselves.
+            nParticle           1;  // the number of particles per parcel. Seems like a mass per parcel almost, indirectly? But only if the solver is meant to do that type of calculation, this solver doesn't use this method, seems to ignore particles and just works with parcels.
+            
+            // size information
+            sizeDistribution
+            {
+                type        fixedValue;
+                fixedValueDistribution
+                {
+                    value   0.001; //0.001 m is 1 mm or 1,000 micrometers
+                }
+            }
+            
+            // velocity method and vars
+            velocityType        cellCenterValues;   //constantVelocity;//cellCenterValues;
+            //U0                  (9 0 0);    // a single velocity value to be used for all particles if velocityType is set to constantVelocity
+            
+            // injection geometry information
+            // notice that xMin and xMax are equal, no other min and max are equal, collapsing the cuboid down to be a rectangle
+            xMin                213.9696;
+            xMax                213.9696;
+            yMin                213.9696;
+            yMax                312.7248;
+            zMin                  0.0000;
+            zMax                 16.4592;
+        }
+        
+        /*
+        model1
+        {
+            type                myCuboidInjection;
+            
+            // time information
+            SOI                 0;  // time to delay before releasing particles. Is messed up and doesn't work if starting at a time directory greater than 0.
+            duration            0.01;   // amount of time over which to do the release. Splits up the number of parcels and mass over the time of release, but this is messed up when starting with a time directory greater than 0. Instantaneous release, seems you need to use the timestep as the value for a one time release. In this case I want an instantaneous release, so this value is set to the timestep value found in controlDict.
+            
+            // quantity information
+            massTotal           0;  // <-- not used with these settings. SAYS IT IS SET TO DO NOTHING IF USING parcelBasisType fixed. Luckily this value isn't really used.
+            parcelBasisType     fixed;  // determines the method for calculating nParticles. Fixed means you choose nParticles. The other options calculate it using combinations of total mass, particle mass, particle volume, total volume.
+            parcelsPerSecond    233280000;  // To get this number, take your desired total number of particles to be released by this injection and divide it by the duration of the injection to convert from nPars/x_seconds to nPars/1_second. So parcelsPerSecond = nPars/duration.  Notice that the algorythm can randomly add an extra parcel.
+            flowRateProfile     constant 1; // is this even used? I'm still not fully understanding how this is used or how it affects things. It seems related to parcelsToInject, like the volume equivalent version of it, but I still don't understand it. It seems to only matter when parcelBasisType is not set to fixed, and seems separate from the volumeTotal of the particles themselves.
+            nParticle           1;  // the number of particles per parcel. Seems like a mass per parcel almost, indirectly? But only if the solver is meant to do that type of calculation, this solver doesn't use this method, seems to ignore particles and just works with parcels.
+            
+            // size information
+            sizeDistribution
+            {
+                type        fixedValue;
+                fixedValueDistribution
+                {
+                    value   0.001; //0.001 m is 1 mm or 1,000 micrometers
+                }
+            }
+            
+            // velocity method and vars
+            velocityType        cellCenterValues;   //constantVelocity;//cellCenterValues;
+            //U0                  (9 0 0);    // a single velocity value to be used for all particles if velocityType is set to constantVelocity
+            
+            // injection geometry information
+            // notice that xMin and xMax are equal, no other min and max are equal, collapsing the cuboid down to be a rectangle
+            xMin                197.5104;
+            xMax                197.5104;
+            yMin                197.5104;
+            yMax                329.1840;
+            zMin                  0.0000;
+            zMax                 65.8368;
+        }
+        */
+        
+    }
+
+    dispersionModel myStochasticDispersionRAS;//stochasticDispersionRAS//gradientDispersionRAS;//none;
+    patchInteractionModel standardWallInteraction;
+        standardWallInteractionCoeffs
+        {
+            type stick;//rebound;//stick;//escape;
+        }
+    stochasticCollisionModel none;  // options for particleFoam are only none
+    surfaceFilmModel none;  // options for particleFoam are only none
+    collisionModel none;  // options for particleFoam are only none or pairCollision. Runs way slower.
+}
+
+
+cloudFunctions
+{
+    //myParCalcs1
+    //{
+    //    type myParCalcs;
+    //}
+}
+
+
+// ************************************************************************* //

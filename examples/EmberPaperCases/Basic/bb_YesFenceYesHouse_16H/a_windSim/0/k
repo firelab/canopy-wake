@@ -1,0 +1,73 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      k;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// approx k = 1.5*(I*U)^2 ; where I = 0.1. In my case k = 1.08919 to 1.08943 for the entire inlet domain edge. The average value is 1.08930
+// Using the formula here for the UfreeStream, I got k = 1.1990685696, but it looks like it is better to use the value determined by the code
+// formula seen in Wind Around Buildings tutorial, explained here: https://cfd.direct/openfoam/user-guide/v9-cavity/#x5-340002.1.8
+kInlet          1.08930;
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform $kInlet;
+
+boundaryField
+{
+
+    xMin
+    {
+        type                    logProfileTurbulentKineticEnergyInlet;
+        UfreeStream             8.9408;    // 20 mph
+        uDirection              (1 0 0);
+        inputWindHeight_Veg     6.095999805;    // 20 ft
+        z0                      0.01;
+        Rd                      0;
+        firstCellHeight         0.9144;  // dz. 3 ft
+        //value                 uniform 1.08930;
+    }
+    xMax
+    {
+        type            zeroGradient;
+    }
+	yMin
+    {
+        type            zeroGradient;
+    }
+	yMax
+    {
+        type            zeroGradient;
+    }
+	zMax
+    {
+        type            zeroGradient;
+    }
+	
+    ground
+    {
+        type            kqRWallFunction;
+        value           uniform $kInlet;
+    }
+    
+    
+    cube
+    {
+        type            kqRWallFunction;
+        value           uniform 0.1;
+    }
+
+}
+
+
+// ************************************************************************* //

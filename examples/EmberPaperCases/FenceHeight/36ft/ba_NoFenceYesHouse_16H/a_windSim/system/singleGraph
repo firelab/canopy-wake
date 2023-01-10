@@ -1,0 +1,93 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | 
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+Description
+    Writes graph data for specified fields along a line, specified by start
+    and end points.
+
+\*---------------------------------------------------------------------------*/
+
+
+
+// choice of variables
+fields  (U p k epsilon);
+
+
+// Sampling and I/O settings
+interpolationScheme cellPoint;
+setFormat   raw;
+setConfig
+{
+    // old Segerson case used uniform, midPoint, and midPointAndFace. When I used those, OpenFOAM 8 complained saying to use
+    // lineUniform instead of uniform, lineCell instead of midPoint, and lineCellFace instead of midPointAndFace
+    // axis seems to select the tilt from the origin. Using distance for axis seems better than trying to get it right
+    // for each and every case
+    // files seem to always be named xy, but that is probably because x and y are set, and z varies.
+    type    lineUniform;    //lineCell; lineUniform; // lineCell, lineCellFace
+    axis    distance;   // x, y, z, xyz, distance
+    nPoints 1000;       //100;
+}
+
+
+type            sets;
+libs            ("libsampling.so");
+
+writeControl    writeTime;
+
+sets
+(
+    line0x504y  // this is ft, in m this is (0, 153.6192, 0 to 87.7824) (z is 288 ft)
+    {
+        $setConfig;
+        start (  0.0000 153.6192  0.0000);
+        end   (  0.0000 153.6192 87.7824);
+    }
+    line50x504y  // this is ft, in m this is (15.24, 153.6192, 0 to 87.7824) (z is 288 ft)
+    {
+        $setConfig;
+        start ( 15.2400 153.6192  0.0000);
+        end   ( 15.2400 153.6192 87.7824);
+    }
+    line200x504y  // this is ft, in m this is (60.96, 153.6192, 0 to 87.7824) (z is 288 ft)
+    {
+        $setConfig;
+        start ( 60.9600 153.6192  0.0000);
+        end   ( 60.9600 153.6192 87.7824);
+    }
+    line400x504y  // this is ft, in m this is (121.92, 153.6192, 0 to 87.7824) (z is 288 ft)
+    {
+        $setConfig;
+        start (121.9200 153.6192  0.0000);
+        end   (121.9200 153.6192 87.7824);
+    }
+    line600x504y  // this is ft, in m this is (182.88, 153.6192, 0 to 87.7824) (z is 288 ft)
+    {
+        $setConfig;
+        start (182.8800 153.6192  0.0000);
+        end   (182.8800 153.6192 87.7824);
+    }
+    line1100x504y  // this is ft, in m this is (335.28, 153.6192, 0 to 87.7824) (z is 288 ft)
+    {
+        $setConfig;
+        start (335.2800 153.6192  0.0000);
+        end   (335.2800 153.6192 87.7824);
+    }
+    line1660x504y  // this is ft, in m this is (505.968, 153.6192, 0 to 87.7824) (z is 288 ft)
+    {
+        $setConfig;
+        start (505.9680 153.6192  0.0000);
+        end   (505.9680 153.6192 87.7824);
+    }
+    line1710x504y  // this is ft, in m this is (521.2080, 153.6192, 0 to 87.7824) (z is 288 ft)
+    {
+        $setConfig;
+        start (521.2080 153.6192  0.0000);
+        end   (521.2080 153.6192 87.7824);
+    }
+);
+
+// ************************************************************************* //

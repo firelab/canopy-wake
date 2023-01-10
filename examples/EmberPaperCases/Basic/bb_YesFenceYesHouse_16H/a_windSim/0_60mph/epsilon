@@ -1,0 +1,77 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      epsilon;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Cmu^0.75 * k^1.5 / L, where Cmu = 0.09, and L = 10. In my case k = 9.80270 to 9.80466 for the entire inlet domain edge. The average value is 9.80350
+// formula seen in Wind Around Buildings tutorial, explained here: https://cfd.direct/openfoam/user-guide/v9-cavity/#x5-340002.1.8
+epsilonInlet  0.50437506942;
+
+dimensions      [0 2 -3 0 0 0 0];
+
+internalField   uniform $epsilonInlet;
+
+boundaryField
+{
+
+    xMin
+    {
+        type                    logProfileDissipationRateInlet;
+        UfreeStream             26.8224;    // 60 mph
+        uDirection              (1 0 0);
+        inputWindHeight_Veg     6.095999805;    // 20 ft
+        z0                      0.01;
+        Rd                      0;
+        firstCellHeight         0.9144;  // dz. 3 ft
+    }
+    xMax
+    {
+        type            zeroGradient;
+    }
+    yMin
+    {
+        type            zeroGradient;
+    }
+	yMax
+    {
+        type            zeroGradient;
+    }
+	zMax
+    {
+        type            zeroGradient;
+    }
+
+    ground
+    {
+        type            myEpsilonWallFunction;
+        Cmu             0.09;
+        kappa           0.41;
+        E               9.8;
+        value           uniform $epsilonInlet;
+    }
+    
+    
+    cube
+    {
+        type            epsilonWallFunction;
+        Cmu             0.09;
+        kappa           0.41;
+        E               9.8;
+        value           uniform 1;
+    }
+    
+}
+
+
+// ************************************************************************* //

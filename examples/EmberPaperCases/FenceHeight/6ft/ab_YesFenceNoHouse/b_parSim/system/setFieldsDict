@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues
+(
+    volScalarFieldValue Cd 0
+    volScalarFieldValue LAD 0
+);
+
+regions
+(
+	boxToCell
+    {
+        // this represents an H x 48H x H vegetation fence to be placed 16H upwind of the building in x with 10H on each side in y
+        // the vegetation fence consisting of 48 early growth oak trees of size L x W x H, with L == W == H and H = 6 ft
+        // so the vegetation fence is 6 ft x 288 ft x 6 ft (1.8288 m x 87.7824 m x 1.8288 m), 
+        // but it turns out that the building is big enough that the domain needs to be much bigger than the dimensions of the fence.
+        // so going to have to play around with the setup until something is found that works (still ridiculous use of computational resources)
+        // Currently, the domain is sized with 6Hbdg from the domain xMin to the building, 50 ft for the building, and 10Hbdg downwind 
+        // from the building to the domain xMax. Also with 6Hbdg on each side of the building to the domain edges in y. Also with 7Hbdg for z.
+        // The fence still needs to be spaced 16H upwind of the building in x, centered in y, but now the dimensions of the domain depend on the 
+        // building rather than the fence, making calculation of the fence location a bit trickier.
+        // in x, fence goes from 6Hbdg - 16H - H (last H is the fence size) to 6Hbdg - 16H, which is
+        //  6Hbdg - 17H = 6*30ft - 17*6ft = 180 ft - 102 ft = 78 ft (23.7744 m)
+        //  to 6Hbdg - 16H = 6*30ft - 16*6ft = 180 ft - 96 ft = 84 ft (25.6032 m)
+        //  Looks like 78 ft is 13H, so looks like I didn't mess something up with my domain sizing
+        // in y, fence goes from domainSize / 2 - 288 ft / 2 to domainSize / 2 + 288 ft / 2, which is
+        //  domainSize = 6Hbdg + 50 ft + 6Hbdg = 12Hbdg + 50 ft = 12*30ft + 50 ft = 360 ft + 50 ft = 410 ft (124.968 m)
+        //  domainSize / 2 = 410 / 2 = 205 ft (62.4840 m)
+        //  fenceWidth / 2 = 288 ft / 2 = 144 ft (43.8912 m)
+        //  y goes from 205 ft - 144 ft = 61 ft (18.5928 m) to 205 + 144 ft = 349 ft (106.3752 m)
+        //  hrm, the gap from the fence to the domain edge in y is only 61 ft, which is ~10H. Seems like not much, but it SHOULD be big enough
+        //   I guess if it doesn't end up being big enough, can always start over again with the domain sizing.
+        // in z, fence goes from 0 to H, so from 0 ft (0 m) to 6 ft 1.8288 m)
+        // make sure to do at least 4 decimal places in calculations from ft to m to reduce round off error when being used with the mesh resolution
+        box ( 23.7744 18.5928 0.0000) ( 25.6032 106.3752 1.8288);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10
+        );
+    }
+);
+
+
+// ************************************************************************* //

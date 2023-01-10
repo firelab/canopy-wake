@@ -1,0 +1,164 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+vertices
+(
+    // note that 4 decimal places seems to reduce round off error when calculating the mesh resolution
+    // 
+    // the domain is expecting an H x 48H x H vegetation fence to be placed 10H downwind in x and right in the middle of the domain in y 
+    // with 10H of empty space on each side, a 50 ft x 50 ft x 30 ft (15.2400 m x 15.2400 m x 9.1440 m) house/building to be placed 
+    // at a max of 20H downwind of the vegetation fence and right in the middle of the domain in y, with 15H of empty space downwind of the 
+    // building and 7Hbdg - H of empty space above the vegetation fence. H is the height of the vegetation fence and Hbdg is the height of the building,
+    // where the fence is made up of 48 single trees each of size L x W x H, the mesh resolution chosen to give 6 cells per side of a single tree.
+    // so dx = L/6, dy = W/6, dz = H/6. But in these sets of cases, the trees are considered to be the same size in x, y, and z, so L == W == H 
+    // and dx == dy == dz = H/6.
+    // 
+    // In this case, H = 6 ft (1.8288 m), so the vegetation fence is of size 6 ft x 288 ft x 6 ft (1.8288 m x 87.7824 m x 1.8288 m),
+    // and dx = dy = dz = H/6 = 6 ft / 6 = 1 ft (0.3048 m).
+    // 
+    // note that the building is placed using a size of 50 ft x 50 ft x 30 ft, and no modification to it's fill size needs made for it because it is already
+    // of a good size to handle even meshing with the 1 ft resolution
+    // 
+    // technically the house/building and vegetation fence aren't always placed in the domain, the idea is that the domain is sized as if they 
+    // are both placed in the domain even for the cases where they are purposefully not placed into the domain. Heck, for some of the base cases,
+    // buildings are placed in all kinds of different locations, the idea is to have the domain big enough for the farthest downwind building case
+    // which is the 20H building case even if buildings are placed with less distance than that to the fence.
+    // 
+    // 
+    // !!!
+    // the above would be how this case would be configured IF it behaved like other cases. In this case, the building is bigger than the fence, so sizing the 
+    // domain based off the fence size is not going to work because the fence requires only so much distance upwind and downwind of it but the building requires much more
+    // space around it than scaling by the fence would give. So the building needs to determine the size of the domain in this case, not the fence.
+    // General rule of thumb is to size it the same as before, but picking H of the building or H of the fence whichever is bigger when a constraint is hit.
+    // So probably should do 10Hbdg upwind of the building, 16H from the fence to the building (so 10Hbdg-17H for the fence placement, an extra H is the fence size), 
+    // 50 ft for the building (50H), and 15Hbdg downwind of the building for the x dimension. Use 10Hbdg on the sides of the building, or 10H on the sides of the fence, 
+    // whichever is greater, for the y dimension. Turns out that 10Hbdg and even 6Hbdg is greater than 10H, and 10Hbdg is greater than what is used for the 18ft case,
+    // so try 6Hbdg on each side of the building for the y dimension (so fence is placed at 6Hbdg + 50 ft / 2 - 288 ft / 2 to 6Hbdg - 50 ft / 2 + 288 ft / 2).
+    // Use 7Hbdg for the z dimension since for sure 7H is much smaller than that.
+    // 
+    // it turns out that this configuration is still pretty computationally expensive, but doable. This resulted in 
+    // The domain size in x is 10Hbdg to the house/building, 50 ft (50H) for the house/building, 15HBdg downwind of the building to the domain end,
+    //  for a total of 10Hbdg + 50H + 15Hbdg = 25Hbdg + 50H = 25*30 ft + 50 ft = 750 ft + 50 ft = 800 ft (243.8400 m)
+    // The domain size in y is 6Hbdg to the house/building, 50 ft (50H) for the house/building, and 6Hbdg from the house/building to the domain end,
+    //  for a total of 6Hbdg + 50 ft (50H) + 6Hbdg = 12Hbdg + 50 ft = 12*30 ft + 50 ft = 360 ft + 50 ft = 410 ft (124.9680 m)
+    // The domain size in z is 7Hbdg. 7Hbdg = 7*30ft = 210 ft (64.0080 m)
+    // 
+    // this results in 
+    // 1 ft x 1 ft x 1 ft resolution (0.3048 m x 0.3048 m x 0.3048 m)
+    // nx = Lx/dx = 800 ft / 1 ft = 800
+    // ny = Ly/dy = 410 ft / 1 ft = 410
+    // nz = Lz/dz = 210 ft / 1 ft = 210
+    // ncells = nx*ny*nz = 800*410*210 = 68,880,000 =~ 68.88 million cells before adding any buildings. Wow, this is actually good enough :). 
+    // Still a TON, might be able to shrink the domain even more, but it isn't the end of the world like the first number I got when I accidentally 
+    //  used Hbdg as 50 ft instead of 30 ft and got a total of =~ 177.45 million cells using these same calculations
+    // 
+    // anyhow, I had first used Hbdg of 50 ft instead of 30 ft, and with those numbers it was so computationally expensive as to not be doable at all.
+    // I then tried to shrink the domain by using 6Hbdg instead of 10Hbdg, and 10Hbdg instead of 15Hbdg for the x calculation, but using the wrong 
+    // 50 ft instead of 30 ft for the Hbdg, and still had something too computationally expensive (111.16 million cells).
+    // so thank goodness that Hbdg will work with the above domain. But, if you were to use the shrunk domain of 6Hbdg and 10Hbdg for the x dimension, 
+    //  then 6Hbdg + 50H + 10Hbdg = 16Hbdg + 50 ft = 16*30ft + 50 ft = 480 ft + 50 ft = 530 ft (161.5440 m)
+    // this would make nx now be 530 instead of 800, resulting in 530*410*210 = 45,633,000 =~ 45.633 million cells, even more doable.
+    // the question is, does this mess up the resulting solution or not? Well, I guess I'm probably going to do this simplified domain, we care the most 
+    // about what is going on at the fence anyways
+    // !!!
+    // 
+    
+    (  0.0000    0.0000   0.0000)
+    (161.5440    0.0000   0.0000)
+	(161.5440  124.9680   0.0000)
+	(  0.0000  124.9680   0.0000)
+	(  0.0000    0.0000  64.0080)
+    (161.5440    0.0000  64.0080)
+	(161.5440  124.9680  64.0080)
+	(  0.0000  124.9680  64.0080)
+    
+);
+
+// 1 ft x 1 ft x 1 ft resolution (0.3048 m x 0.3048 m x 0.3048 m)
+// nx = Lx/dx =  530 ft / 1 ft =  530
+// ny = Ly/dy =  410 ft / 1 ft =  410
+// nz = Lz/dz =  210 ft / 1 ft =  210
+// ncells = nx*ny*nz = 530*410*210 = 45,633,000 =~ 45.633 million cells before adding any buildings. Not doable on normal machines, but still doable on my monster machine
+nxBlock  530;
+nyBlock  410;
+nzBlock  210;
+
+blocks
+(
+	hex (0 1 2 3 4 5 6 7) ($nxBlock $nyBlock $nzBlock) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    xMin
+	{
+		type patch;
+		faces
+		(
+			(0 4 7 3)
+		);
+	}
+	xMax
+	{
+		type patch;
+		faces
+		(
+			(1 2  6 5)
+		);
+	}
+	yMin
+	{
+		type patch;
+		faces
+		(
+			(0 4 5 1)
+		);
+	}
+	yMax
+	{
+		type patch;
+		faces
+		(
+			(2 6 7 3)
+		);
+	}
+
+	zMax
+	{
+		type patch;
+		faces
+		(
+			(4 7 6 5)
+		);
+	}
+
+	ground
+	{
+		type wall;
+		faces
+		(
+			(0 1 2 3)
+		);
+	}
+);
+
+// ************************************************************************* //

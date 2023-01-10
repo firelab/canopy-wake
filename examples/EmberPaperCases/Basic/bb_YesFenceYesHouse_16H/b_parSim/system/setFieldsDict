@@ -1,0 +1,44 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues
+(
+    volScalarFieldValue Cd 0
+    volScalarFieldValue LAD 0
+);
+
+regions
+(
+	boxToCell
+    {
+        // this represents an H x 16H x H vegetation fence to be placed 10H downwind in x with 10H on each side in y
+        // the vegetation fence consisting of 16 full grown oak trees of size L x W x H, with L == W == H and H = 18 ft
+        // so the vegetation fence is 18 ft x 288 ft x 18 ft (5.4864 m x 87.7824 m x 5.4864 m), 
+        // placed 10H = 10*18 ft = 180 ft (54.8640 m) to 10H + 1H = 11H = 11*18 ft = 198 ft (60.3504 m) in x,
+        // placed 10H = 10*18 ft = 180 ft (54.8640 m) to 10H + 16H (288 ft) = 26H = 26*18 ft = 468 ft (142.6464 m) in y
+        // placed 0H = 0 ft (0 m) to 1H = 18 ft (5.4864 m) in z
+        // make sure to do at least 4 decimal places in calculations from ft to m to reduce round off error when being used with the mesh resolution
+        box ( 54.8640 54.8640 0.0000) ( 60.3504 142.6464 5.4864);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10
+        );
+    }
+);
+
+
+// ************************************************************************* //

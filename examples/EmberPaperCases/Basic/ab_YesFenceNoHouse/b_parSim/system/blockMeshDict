@@ -1,0 +1,135 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+vertices
+(
+    // note that 4 decimal places seems to reduce round off error when calculating the mesh resolution
+    // 
+    // the domain is expecting an H x 16H x H vegetation fence to be placed 10H downwind in x and right in the middle of the domain in y 
+    // with 10H of empty space on each side, a 50 ft x 50 ft x 30 ft (15.2400 m x 15.2400 m x 9.1440 m) house/building to be placed 
+    // at a max of 20H downwind of the vegetation fence and right in the middle of the domain in y, with 15H of empty space downwind of the 
+    // building and 7Hbdg - H of empty space above the vegetation fence. H is the height of the vegetation fence and Hbdg is the height of the building,
+    // where the fence is made up of 16 single trees each of size L x W x H, the mesh resolution chosen to give 6 cells per side of a single tree.
+    // so dx = L/6, dy = W/6, dz = H/6. But in these sets of cases, the trees are considered to be the same size in x, y, and z, so L == W == H 
+    // and dx == dy == dz = H/6.
+    // 
+    // In this case, H = 18 ft (5.4864 m), so the vegetation fence is of size 18 ft x 288 ft x 18 ft (5.4864 m x 87.7824 m x 5.4864 m),
+    // and dx = dy = dz = H/6 = 18 ft / 6 = 3 ft (0.9144 m).
+    // 
+    // note that the building is placed using a size of 50 ft x 50 ft x 30 ft, but it is considered to be of size 51 ft x 51 ft x 30 ft for evening meshing at
+    // the original base case 3 ft resolution
+    // 
+    // technically the house/building and vegetation fence aren't always placed in the domain, the idea is that the domain is sized as if they 
+    // are both placed in the domain even for the cases where they are purposefully not placed into the domain. Heck, for some of the base cases,
+    // buildings are placed in all kinds of different locations, the idea is to have the domain big enough for the farthest downwind building case
+    // which is the 20H building case even if buildings are placed with less distance than that to the fence.
+    // 
+    // 
+    // The domain size in x is 10H to the vegetation fence, H for the vegetation fence, a max of 20H between the vegetation fence and the house/building,
+    //  51 ft (2 5/6H = 17/6H) for the house/building, 15H downwind of the building to the domain end for the max of 20H between the fence and the house/building,
+    //  for a total of 10H + 1H + 20H + 17/6H + 15H = 48 5/6H = 864 ft + 15 ft = 879 ft (267.9192 m)
+    // The domain size in y is 10H to the vegetation fence, 288 ft (16H) for the vegetation fence, and 10H from the vegetation fence to the domain end,
+    //  for a total of 10H + 288 ft (16H) + 10H = 36H = 648 ft (197.5104 m)
+    // The domain size in z used to be 1H for the vegetation fence and 7H above the fence to the top of the domain, BUT adding in the building makes that 
+    //  domain too short. So a size of 7Hbdg (7*30 ft) is used instead. So 7Hbdg = 7*30ft = 210 ft (64.0080 m)
+    // 
+    
+    (  0.0000    0.0000   0.0000)
+    (267.9192    0.0000   0.0000)
+	(267.9192  197.5104   0.0000)
+	(  0.0000  197.5104   0.0000)
+	(  0.0000    0.0000  64.0080)
+    (267.9192    0.0000  64.0080)
+	(267.9192  197.5104  64.0080)
+	(  0.0000  197.5104  64.0080)
+    
+);
+
+// 3 ft x 3 ft x 3 ft resolution (0.9144 m x 0.9144 m x 0.9144 m)
+// nx = Lx/dx = 879 ft / 3 ft = 293
+// ny = Ly/dy = 648 ft / 3 ft = 216
+// nz = Lz/dz = 210 ft / 3 ft = 70
+// ncells = nx*ny*nz = 293*216*70 = 4,430,160 =~ 4.43 million cells before adding any buildings
+nxBlock 293;
+nyBlock 216;
+nzBlock  70;
+
+blocks
+(
+	hex (0 1 2 3 4 5 6 7) ($nxBlock $nyBlock $nzBlock) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    xMin
+	{
+		type patch;
+		faces
+		(
+			(0 4 7 3)
+		);
+	}
+	xMax
+	{
+		type patch;
+		faces
+		(
+			(1 2  6 5)
+		);
+	}
+	yMin
+	{
+		type patch;
+		faces
+		(
+			(0 4 5 1)
+		);
+	}
+	yMax
+	{
+		type patch;
+		faces
+		(
+			(2 6 7 3)
+		);
+	}
+
+	zMax
+	{
+		type patch;
+		faces
+		(
+			(4 7 6 5)
+		);
+	}
+
+	ground
+	{
+		type wall;
+		faces
+		(
+			(0 1 2 3)
+		);
+	}
+);
+
+// ************************************************************************* //

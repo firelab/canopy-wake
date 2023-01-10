@@ -1,0 +1,118 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues
+(
+    volScalarFieldValue Cd 0
+    volScalarFieldValue LAD 0
+);
+
+regions
+(
+    // this represents an H x 16H x H vegetation fence to be placed 10H downwind in x with 10H on each side in y
+    // the vegetation fence consisting of 16 full grown oak trees of size L x W x H, with L == W == H and H = 18 ft
+    // so the vegetation fence is 18 ft x 288 ft x 18 ft (5.4864 m x 87.7824 m x 5.4864 m), 
+    // placed 10H = 10*18 ft = 180 ft (54.8640 m) to 10H + 1H = 11H = 11*18 ft = 198 ft (60.3504 m) in x,
+    // placed 10H = 10*18 ft = 180 ft (54.8640 m) to 10H + 16H (288 ft) = 26H = 26*18 ft = 468 ft (142.6464 m) in y
+    // placed 0H = 0 ft (0 m) to 1H = 18 ft (5.4864 m) in z
+    // but now with every 3rd tree taken out of the fence
+    // note that this leaves one extra gap on the last edge of the fence, from 450 to 468 ft, so the fence 
+    //  comes out one object size (18 ft) less in width than the 0W gap case.
+    // make sure to do at least 4 decimal places in calculations from ft to m to reduce round off error when being used with the mesh resolution
+    boxToCell
+    {
+        // from 180 ft to 198 ft (54.864 m to 60.3504 m)
+        box ( 54.8640 54.8640 0.0000) ( 60.3504 60.3504 5.4864);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10  //2//10
+        );
+    }
+    boxToCell
+    {
+        // from 216 ft to 234 ft (65.8368 m to 71.3232 m)
+        box ( 54.8640 65.8368 0.0000) ( 60.3504 71.3232 5.4864);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10  //2//10
+        );
+    }
+    boxToCell
+    {
+        // from 252 ft to 270 ft (76.8096 m to 82.296 m)
+        box ( 54.8640 76.8096 0.0000) ( 60.3504 82.2960 5.4864);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10  //2//10
+        );
+    }
+    boxToCell
+    {
+        // from 288 ft to 306 ft (87.7824 m to 93.2688 m)
+        box ( 54.8640 87.7824 0.0000) ( 60.3504 93.2688 5.4864);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10  //2//10
+        );
+    }
+    boxToCell
+    {
+        // from 324 ft to 342 ft (98.7552 m to 104.2416 m)
+        box ( 54.8640 98.7552 0.0000) ( 60.3504 104.2416 5.4864);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10  //2//10
+        );
+    }
+    boxToCell
+    {
+        // from 360 ft to 378 ft (109.728 m to 115.2144 m)
+        box ( 54.8640 109.7280 0.0000) ( 60.3504 115.2144 5.4864);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10  //2//10
+        );
+    }
+    boxToCell
+    {
+        // from 396 ft to 414 ft (120.7008 m to 126.1872 m)
+        box ( 54.8640 120.7008 0.0000) ( 60.3504 126.1872 5.4864);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10  //2//10
+        );
+    }
+    boxToCell
+    {
+        // from 432 ft to 450 ft (131.6736 m to 137.16 m)
+        box ( 54.8640 131.6736 0.0000) ( 60.3504 137.1600 5.4864);
+        fieldValues
+        (
+            volScalarFieldValue  Cd 0.5
+            volScalarFieldValue LAD 10  //2//10
+        );
+    }
+);
+
+
+// ************************************************************************* //
